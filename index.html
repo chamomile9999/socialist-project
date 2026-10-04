@@ -1,0 +1,2431 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>The People's Oval Office — Interactive Campaign Manifesto</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- GSAP -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <!-- Three.js -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    
+    <!-- Google Fonts: Playfair Display & Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #F4F7F5;
+            font-family: 'Playfair Display', serif;
+            user-select: none;
+        }
+
+        .sans-ui {
+            font-family: 'Inter', system-ui, -apple-system, sans-serif;
+        }
+
+        #webgl-container {
+            position: fixed;
+            inset: 0;
+            z-index: 1;
+        }
+
+        canvas {
+            display: block;
+            touch-action: none;
+        }
+
+        .magazine-title {
+            line-height: 1.08;
+            letter-spacing: -0.02em;
+        }
+        
+        .elegant-button {
+            font-family: 'Inter', system-ui, sans-serif;
+            letter-spacing: 0.35em;
+            text-transform: uppercase;
+        }
+
+        /* Split Doors Cutout */
+        .clip-left {
+            clip-path: polygon(0 0, 50% 0, 50% 100%, 0 100%);
+        }
+        .clip-right {
+            clip-path: polygon(50% 0, 100% 0, 100% 100%, 50% 100%);
+        }
+
+        /* English Interactive Tooltip (Above Bottom Bar) */
+        #hint {
+            position: fixed;
+            left: 50%;
+            bottom: 96px;
+            transform: translateX(-50%) translateY(10px);
+            background: rgba(19, 42, 34, 0.95);
+            color: #F4F7F5;
+            border: 1px solid #E55B44;
+            border-radius: 999px;
+            padding: 8px 22px;
+            font: 600 11px/1 'Inter', monospace;
+            letter-spacing: 0.12em;
+            text-transform: uppercase;
+            z-index: 20;
+            box-shadow: 0 10px 28px rgba(19, 42, 34, 0.28);
+            opacity: 0;
+            transition: opacity 0.22s ease, transform 0.22s ease;
+            pointer-events: none;
+            white-space: nowrap;
+        }
+        #hint.show {
+            opacity: 1;
+            transform: translateX(-50%) translateY(0);
+        }
+        #hint b {
+            color: #E55B44;
+            margin-left: 6px;
+        }
+
+        /* Sticky Note Editor Modal */
+        #noteEditor {
+            position: fixed;
+            top: 80px;
+            left: 50%;
+            transform: translateX(-50%) translateY(-20px) scale(0.95);
+            background: #FAF8F2;
+            border: 2px solid #132A22;
+            border-radius: 10px;
+            padding: 16px 20px;
+            font-family: 'Inter', sans-serif;
+            color: #132A22;
+            z-index: 50;
+            box-shadow: 0 14px 36px rgba(19, 42, 34, 0.3);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.25s cubic-bezier(0.34, 1.5, 0.64, 1);
+        }
+        #noteEditor.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateX(-50%) translateY(0) scale(1);
+        }
+
+        /* Press Camera Flash Overlay */
+        #flashOverlay {
+            position: fixed;
+            inset: 0;
+            background: #FFFFFF;
+            opacity: 0;
+            pointer-events: none;
+            z-index: 45;
+        }
+
+        /* ===================================================== */
+        /* FULL-WIDTH FLUSH EDITORIAL BOTTOM NAVIGATION BAR      */
+        /* ===================================================== */
+        #bottom-dock {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            width: 100%;
+            height: 76px;
+            z-index: 28;
+            display: flex;
+            align-items: stretch;
+            background: rgba(250, 248, 242, 0.96);
+            backdrop-filter: blur(12px);
+            border-top: 1px solid rgba(19, 42, 34, 0.18);
+            box-shadow: 0 -10px 35px rgba(19, 42, 34, 0.08);
+            opacity: 0;
+            transform: translateY(100%);
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        #bottom-dock.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+
+        .dock-block {
+            position: relative;
+            flex: 1;
+            background: transparent;
+            color: #132A22;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 0 12px;
+            outline: none;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* Floating Vertical Hairline Divider (Does NOT touch top or bottom edges) */
+        .dock-block:not(:last-child)::after {
+            content: '';
+            position: absolute;
+            right: 0;
+            top: 26%;
+            bottom: 26%;
+            width: 1px;
+            background: rgba(19, 42, 34, 0.18);
+            pointer-events: none;
+        }
+
+        /* Subtle Top Coral Indicator Line on Hover */
+        .dock-block::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 28%;
+            right: 28%;
+            height: 2.5px;
+            background: #E55B44;
+            transform: scaleX(0);
+            transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        .dock-block:hover::before {
+            transform: scaleX(1);
+        }
+
+        .dock-block .num {
+            font-family: 'Playfair Display', serif;
+            font-style: italic;
+            font-size: 11px;
+            letter-spacing: 0.08em;
+            color: #E55B44;
+            margin-bottom: 3px;
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+
+        .dock-block .lbl {
+            font-family: 'Playfair Display', serif;
+            font-weight: 700;
+            font-size: 15px;
+            letter-spacing: 0.06em;
+            color: #132A22;
+            transition: transform 0.3s ease, color 0.3s ease;
+        }
+
+        .dock-block:hover {
+            background: rgba(19, 42, 34, 0.035);
+        }
+        .dock-block:hover .num {
+            transform: translateY(-1px);
+        }
+        .dock-block:hover .lbl {
+            color: #E55B44;
+            transform: translateY(-1px);
+        }
+
+        /* Hover Previews & Transition Stage */
+        #fx-stage {
+            position: fixed;
+            inset: 0;
+            z-index: 25;
+            pointer-events: none;
+            overflow: hidden;
+        }
+        .fx-preview {
+            position: absolute;
+            inset: 0;
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+
+        /* Unified Editorial TBD / Placeholder View */
+        #section-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 38;
+            display: none;
+            background: #FAF8F2;
+            color: #132A22;
+            user-select: text;
+        }
+
+        @keyframes pulseRec {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.2; }
+        }
+        .rec-dot {
+            animation: pulseRec 1.1s infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- ========================================== -->
+    <!-- Phase 2: 3D Oval Office Canvas & Overlays  -->
+    <!-- ========================================== -->
+    <div id="webgl-container"></div>
+    <div id="flashOverlay"></div>
+    <div id="hint"></div>
+
+    <!-- Sticky Note Editor Popup -->
+    <div id="noteEditor">
+        <div class="text-[11px] font-bold tracking-[0.2em] uppercase text-[#E55B44] mb-2">✏️ EDIT CAMPAIGN MEMO</div>
+        <div class="flex items-center gap-2">
+            <input id="noteInput" maxlength="16" class="px-3 py-1.5 text-sm border border-[#132A22] rounded outline-none focus:border-[#E55B44] bg-white w-52 font-semibold uppercase tracking-wider" value="">
+            <button id="noteOk" class="px-4 py-1.5 text-xs font-bold uppercase tracking-widest bg-[#132A22] hover:bg-[#E55B44] text-white rounded transition-colors cursor-pointer">
+                SAVE
+            </button>
+        </div>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- HOVER PREVIEW & CINEMATIC TRANSITION STAGE (6 MODES)  -->
+    <!-- ===================================================== -->
+    <div id="fx-stage">
+        <!-- Vignette Backdrop on Dock Hover -->
+        <div id="fx-backdrop" class="absolute inset-0 bg-[#132A22]/25 opacity-0"></div>
+
+        <!-- 1. CANDIDATE PREVIEW: Floating Framed Portrait -->
+        <div id="prev-candidate" class="fx-preview flex items-center justify-center">
+            <div id="cand-frame" class="relative w-[270px] h-[350px] bg-[#132A22] border-4 border-[#D9A441] shadow-[0_25px_70px_rgba(0,0,0,0.55)] p-3 flex flex-col justify-between overflow-hidden">
+                <div class="border border-[#FAF8F2]/25 h-full w-full relative flex flex-col items-center justify-end p-5 bg-gradient-to-b from-[#1A4D3E] to-[#132A22]">
+                    <div class="absolute top-3 left-3 right-3 flex justify-between text-[9px] sans-ui tracking-[0.25em] text-[#D9A441] uppercase font-bold">
+                        <span>Official Portrait</span>
+                        <span>2028</span>
+                    </div>
+                    <svg viewBox="0 0 200 220" class="w-44 h-48 mb-1">
+                        <circle cx="100" cy="78" r="58" fill="#E55B44" opacity="0.9"/>
+                        <path d="M100 32 L106 48 L122 48 L109 58 L114 74 L100 64 L86 74 L91 58 L78 48 L94 48 Z" fill="#FAF8F2" opacity="0.3"/>
+                        <path d="M72 72 C72 48, 128 48, 128 72 C128 95, 118 112, 100 112 C82 112, 72 95, 72 72 Z" fill="#FAF8F2"/>
+                        <path d="M35 215 C38 148, 68 130, 100 130 C132 130, 162 148, 165 215 Z" fill="#FAF8F2"/>
+                        <polygon points="100,132 91,168 100,208 109,168" fill="#E55B44"/>
+                        <path d="M76 134 L100 175 L124 134" fill="none" stroke="#132A22" stroke-width="3.5"/>
+                    </svg>
+                    <div class="text-center z-10 bg-[#132A22]/90 px-4 py-1.5 border border-[#D9A441]/50 w-full">
+                        <div class="text-[#FAF8F2] font-black text-base tracking-wide">PRESIDENTIAL NOMINEE</div>
+                        <div class="text-[#E55B44] sans-ui text-[8px] tracking-[0.3em] uppercase font-bold">Click to Enter Dossier</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. PLATFORM PREVIEW: Hovering Brass Executive Seal & Ink Nova -->
+        <div id="prev-platform" class="fx-preview flex items-center justify-center">
+            <div id="plat-sheet" class="w-[300px] h-[200px] bg-[#FAF8F2] border-2 border-[#132A22] shadow-2xl p-5 flex flex-col justify-between transform rotate-[-2deg]">
+                <div class="text-[10px] sans-ui font-extrabold tracking-[0.25em] text-[#E55B44] uppercase border-b border-[#132A22] pb-1.5">
+                    H.R. 001 — THE NEW ECONOMIC BILL
+                </div>
+                <div class="space-y-2 my-auto">
+                    <div class="h-2 bg-[#132A22]/20 w-full"></div>
+                    <div class="h-2 bg-[#132A22]/20 w-5/6"></div>
+                    <div class="h-2 bg-[#132A22]/20 w-4/6"></div>
+                </div>
+                <div class="flex justify-between items-center text-[9px] sans-ui font-bold text-[#132A22]/60 uppercase">
+                    <span>Awaiting Ratification</span>
+                    <span class="text-[#E55B44] border border-[#E55B44] px-2 py-0.5">Click to Stamp</span>
+                </div>
+            </div>
+            <div id="plat-stamp" class="absolute flex flex-col items-center">
+                <div class="w-14 h-14 rounded-full bg-[#E55B44] border-2 border-[#132A22] shadow-xl"></div>
+                <div class="w-7 h-16 bg-[#6E472B] border-x-2 border-[#132A22] -mt-2"></div>
+                <div class="w-36 h-8 bg-[#D9A441] border-2 border-[#132A22] rounded-sm shadow-2xl flex items-center justify-center">
+                    <span class="text-[8px] sans-ui font-black tracking-[0.25em] text-[#132A22]">EXECUTIVE SEAL</span>
+                </div>
+            </div>
+            <div id="plat-ink" class="absolute w-24 h-24 rounded-full bg-[#E55B44] scale-0 pointer-events-none"></div>
+        </div>
+
+        <!-- 3. SPEECHES PREVIEW: Broadcast Microphone Array & Press Flashes -->
+        <div id="prev-speeches" class="fx-preview flex items-end justify-center">
+            <div id="speech-mics" class="relative mb-24 flex items-end gap-6">
+                <svg viewBox="0 0 90 190" class="w-24 h-44 transform -rotate-12 translate-y-4 drop-shadow-2xl">
+                    <rect x="25" y="12" width="40" height="68" rx="20" fill="#DCE2E6" stroke="#132A22" stroke-width="4"/>
+                    <line x1="25" y1="32" x2="65" y2="32" stroke="#132A22" stroke-width="3"/>
+                    <line x1="25" y1="48" x2="65" y2="48" stroke="#132A22" stroke-width="3"/>
+                    <line x1="25" y1="64" x2="65" y2="64" stroke="#132A22" stroke-width="3"/>
+                    <rect x="39" y="80" width="12" height="110" fill="#132A22"/>
+                </svg>
+                <div id="center-mic" class="relative flex flex-col items-center">
+                    <div class="mb-2 px-3 py-1 bg-[#E55B44] border-2 border-[#132A22] text-white sans-ui text-[9px] font-black tracking-[0.25em] flex items-center gap-1.5 shadow-lg">
+                        <span class="w-2 h-2 rounded-full bg-white rec-dot"></span> ON AIR
+                    </div>
+                    <svg viewBox="0 0 120 220" class="w-32 h-56 drop-shadow-2xl">
+                        <rect x="30" y="10" width="60" height="92" rx="30" fill="#D9A441" stroke="#132A22" stroke-width="4"/>
+                        <rect x="36" y="18" width="48" height="76" rx="24" fill="#132A22"/>
+                        <line x1="36" y1="36" x2="84" y2="36" stroke="#FAF8F2" stroke-width="2.5"/>
+                        <line x1="36" y1="50" x2="84" y2="50" stroke="#FAF8F2" stroke-width="2.5"/>
+                        <line x1="36" y1="64" x2="84" y2="64" stroke="#FAF8F2" stroke-width="2.5"/>
+                        <line x1="36" y1="78" x2="84" y2="78" stroke="#FAF8F2" stroke-width="2.5"/>
+                        <path d="M22 65 C22 115, 98 115, 98 65" fill="none" stroke="#132A22" stroke-width="5"/>
+                        <rect x="53" y="112" width="14" height="108" fill="#132A22"/>
+                    </svg>
+                </div>
+                <svg viewBox="0 0 90 190" class="w-24 h-44 transform rotate-12 translate-y-4 drop-shadow-2xl">
+                    <rect x="25" y="12" width="40" height="68" rx="20" fill="#DCE2E6" stroke="#132A22" stroke-width="4"/>
+                    <line x1="25" y1="32" x2="65" y2="32" stroke="#132A22" stroke-width="3"/>
+                    <line x1="25" y1="48" x2="65" y2="48" stroke="#132A22" stroke-width="3"/>
+                    <line x1="25" y1="64" x2="65" y2="64" stroke="#132A22" stroke-width="3"/>
+                    <rect x="39" y="80" width="12" height="110" fill="#132A22"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 4. ENDORSEMENTS PREVIEW: Rising Forest of Hands & Ballot Storm -->
+        <div id="prev-endorsements" class="fx-preview flex items-end justify-center">
+            <div id="endorse-hands" class="w-full max-w-4xl mb-20 flex justify-around items-end px-8">
+                <svg viewBox="0 0 110 220" class="end-hand w-28 h-52 drop-shadow-xl">
+                    <rect x="34" y="95" width="42" height="125" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
+                    <rect x="28" y="150" width="54" height="70" fill="#1A4D3E" stroke="#132A22" stroke-width="4"/>
+                    <rect x="24" y="35" width="62" height="62" rx="12" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
+                    <line x1="40" y1="35" x2="40" y2="72" stroke="#132A22" stroke-width="3.5"/>
+                    <line x1="55" y1="35" x2="55" y2="72" stroke="#132A22" stroke-width="3.5"/>
+                    <line x1="70" y1="35" x2="70" y2="72" stroke="#132A22" stroke-width="3.5"/>
+                    <rect x="20" y="62" width="45" height="22" rx="8" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
+                </svg>
+                <svg viewBox="0 0 150 240" class="end-hand w-36 h-60 drop-shadow-xl">
+                    <g transform="rotate(-8 75 70)">
+                        <rect x="18" y="18" width="114" height="74" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
+                        <polyline points="18,18 75,60 132,18" fill="none" stroke="#132A22" stroke-width="3.5"/>
+                        <circle cx="75" cy="56" r="11" fill="#E55B44" stroke="#132A22" stroke-width="2.5"/>
+                    </g>
+                    <rect x="54" y="88" width="40" height="150" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
+                    <rect x="48" y="155" width="52" height="85" fill="#E55B44" stroke="#132A22" stroke-width="4"/>
+                </svg>
+                <svg viewBox="0 0 150 240" class="end-hand w-36 h-56 drop-shadow-xl">
+                    <g transform="rotate(6 75 65)">
+                        <rect x="20" y="15" width="110" height="68" fill="#D9A441" stroke="#132A22" stroke-width="4"/>
+                        <text x="75" y="56" text-anchor="middle" fill="#132A22" font-family="Inter, sans-serif" font-weight="900" font-size="18">UNION YES</text>
+                    </g>
+                    <rect x="68" y="82" width="14" height="158" fill="#6E472B" stroke="#132A22" stroke-width="3.5"/>
+                    <rect x="52" y="125" width="44" height="45" rx="10" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
+                </svg>
+                <svg viewBox="0 0 110 220" class="end-hand w-28 h-52 drop-shadow-xl">
+                    <rect x="34" y="95" width="42" height="125" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
+                    <rect x="28" y="150" width="54" height="70" fill="#132A22" stroke="#132A22" stroke-width="4"/>
+                    <rect x="24" y="35" width="62" height="62" rx="12" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
+                    <line x1="40" y1="35" x2="40" y2="72" stroke="#132A22" stroke-width="3.5"/>
+                    <line x1="55" y1="35" x2="55" y2="72" stroke="#132A22" stroke-width="3.5"/>
+                    <line x1="70" y1="35" x2="70" y2="72" stroke="#132A22" stroke-width="3.5"/>
+                </svg>
+            </div>
+            <div id="ballot-storm" class="absolute inset-0 pointer-events-none"></div>
+        </div>
+
+        <!-- 5. ATTACK ADS PREVIEW: Hand Aiming Revolver -> Bullet Whip-Pan -->
+        <div id="prev-attack" class="fx-preview flex items-center">
+            <div id="gun-assembly" class="relative ml-6 md:ml-16 flex items-center">
+                <svg viewBox="0 0 420 220" class="w-[340px] md:w-[440px] h-auto drop-shadow-[0_18px_35px_rgba(0,0,0,0.45)]">
+                    <rect x="0" y="96" width="95" height="68" fill="#132A22" stroke="#132A22" stroke-width="4"/>
+                    <rect x="95" y="102" width="26" height="56" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
+                    <circle cx="108" cy="144" r="5" fill="#D9A441"/>
+                    <path d="M121 106 L178 96 L195 148 L121 154 Z" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
+                    <path d="M150 102 L192 102 L176 184 L134 176 Z" fill="#6E472B" stroke="#132A22" stroke-width="4"/>
+                    <path d="M192 118 C226 118, 226 150, 192 150" fill="none" stroke="#132A22" stroke-width="4.5"/>
+                    <path d="M204 120 C212 130, 208 140, 198 144" fill="none" stroke="#E55B44" stroke-width="4"/>
+                    <rect x="168" y="64" width="76" height="44" rx="4" fill="#DCE2E6" stroke="#132A22" stroke-width="4"/>
+                    <rect x="184" y="69" width="46" height="34" rx="5" fill="#94A0A8" stroke="#132A22" stroke-width="3.5"/>
+                    <line x1="188" y1="80" x2="226" y2="80" stroke="#132A22" stroke-width="2.5"/>
+                    <line x1="188" y1="92" x2="226" y2="92" stroke="#132A22" stroke-width="2.5"/>
+                    <path d="M168 68 L150 50 L164 46 L176 64 Z" fill="#132A22"/>
+                    <rect x="244" y="66" width="135" height="22" fill="#DCE2E6" stroke="#132A22" stroke-width="4"/>
+                    <rect x="244" y="88" width="110" height="10" fill="#94A0A8" stroke="#132A22" stroke-width="3.5"/>
+                    <polygon points="365,66 376,52 379,66" fill="#E55B44" stroke="#132A22" stroke-width="2.5"/>
+                    <line x1="382" y1="77" x2="420" y2="77" stroke="#E55B44" stroke-width="2.5" stroke-dasharray="6 4"/>
+                </svg>
+
+                <svg id="muzzle-flash" viewBox="0 0 140 140" class="w-36 h-36 -ml-8 -mt-8 opacity-0 scale-50">
+                    <polygon points="10,70 45,45 35,15 75,40 125,20 95,65 138,70 95,80 120,120 72,95 35,125 45,88" fill="#E55B44" stroke="#FAF8F2" stroke-width="3"/>
+                    <polygon points="20,70 55,55 85,45 75,70 85,95 55,85" fill="#FFE66D"/>
+                </svg>
+            </div>
+
+            <div id="aim-reticle" class="absolute right-24 top-1/2 -translate-y-1/2 w-28 h-28 flex items-center justify-center">
+                <div class="w-full h-full rounded-full border-2 border-dashed border-[#E55B44] animate-spin" style="animation-duration: 9s;"></div>
+                <div class="absolute w-16 h-16 rounded-full border border-[#132A22]"></div>
+                <div class="absolute w-3 h-3 rounded-full bg-[#E55B44]"></div>
+                <div class="absolute -bottom-7 sans-ui text-[9px] font-black tracking-[0.25em] text-[#E55B44] uppercase bg-[#132A22] px-2 py-0.5">TARGET LOCKED</div>
+            </div>
+
+            <div id="flying-bullet" class="absolute left-[360px] top-1/2 -translate-y-1/2 opacity-0 flex items-center">
+                <div class="w-44 h-[3px] bg-gradient-to-r from-transparent via-[#E55B44] to-[#FAF8F2]"></div>
+                <svg viewBox="0 0 90 36" class="w-20 h-9 -ml-2">
+                    <path d="M5 6 L52 6 C72 6, 86 18, 86 18 C86 18, 72 30, 52 30 L5 30 Z" fill="#D9A441" stroke="#132A22" stroke-width="3.5"/>
+                    <line x1="24" y1="6" x2="24" y2="30" stroke="#132A22" stroke-width="3"/>
+                </svg>
+            </div>
+        </div>
+
+        <!-- 6. VIDEOS PREVIEW: Spinning 35mm Vintage Film Reel & Projector Beam -->
+        <div id="prev-videos" class="fx-preview flex items-center justify-center">
+            <div id="proj-beam" class="absolute w-[650px] h-[420px] bg-gradient-to-r from-[#FFF6D6]/60 via-[#FFF6D6]/20 to-transparent" style="clip-path: polygon(0 42%, 100% 0, 100% 100%, 0 58%); transform: translateX(180px);"></div>
+            <div id="film-reel-wrap" class="relative flex items-center">
+                <svg id="film-reel-svg" viewBox="0 0 200 200" class="w-52 h-52 drop-shadow-2xl">
+                    <circle cx="100" cy="100" r="88" fill="#132A22" stroke="#D9A441" stroke-width="6"/>
+                    <circle cx="100" cy="100" r="72" fill="none" stroke="#FAF8F2" stroke-width="2" stroke-dasharray="8 6"/>
+                    <circle cx="100" cy="46" r="18" fill="#FAF8F2" stroke="#D9A441" stroke-width="3"/>
+                    <circle cx="100" cy="154" r="18" fill="#FAF8F2" stroke="#D9A441" stroke-width="3"/>
+                    <circle cx="53" cy="73" r="18" fill="#FAF8F2" stroke="#D9A441" stroke-width="3"/>
+                    <circle cx="147" cy="127" r="18" fill="#FAF8F2" stroke="#D9A441" stroke-width="3"/>
+                    <circle cx="147" cy="73" r="18" fill="#FAF8F2" stroke="#D9A441" stroke-width="3"/>
+                    <circle cx="53" cy="127" r="18" fill="#FAF8F2" stroke="#D9A441" stroke-width="3"/>
+                    <circle cx="100" cy="100" r="16" fill="#E55B44" stroke="#FAF8F2" stroke-width="4"/>
+                </svg>
+                <div id="film-leader" class="absolute inset-0 flex items-center justify-center opacity-0">
+                    <span id="leader-num" class="sans-ui text-6xl font-black text-[#FAF8F2] bg-[#132A22]/90 w-24 h-24 rounded-full border-4 border-[#E55B44] flex items-center justify-center">3</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ===================================================== -->
+    <!-- FULL-WIDTH FLUSH BOTTOM NAVIGATION BAR                -->
+    <!-- ===================================================== -->
+    <nav id="bottom-dock">
+        <button class="dock-block" data-sec="candidate" data-num="I" data-title="The Candidate">
+            <span class="num">I</span>
+            <span class="lbl">Candidate</span>
+        </button>
+        <button class="dock-block" data-sec="platform" data-num="II" data-title="Core Platform">
+            <span class="num">II</span>
+            <span class="lbl">Platform</span>
+        </button>
+        <button class="dock-block" data-sec="speeches" data-num="III" data-title="Keynote Speeches">
+            <span class="num">III</span>
+            <span class="lbl">Speeches</span>
+        </button>
+        <button class="dock-block" data-sec="endorsements" data-num="IV" data-title="Endorsements">
+            <span class="num">IV</span>
+            <span class="lbl">Endorsements</span>
+        </button>
+        <button class="dock-block" data-sec="attack" data-num="V" data-title="Attack Ads">
+            <span class="num">V</span>
+            <span class="lbl">Attack Ads</span>
+        </button>
+        <button class="dock-block" data-sec="videos" data-num="VI" data-title="Campaign Videos">
+            <span class="num">VI</span>
+            <span class="lbl">Videos</span>
+        </button>
+    </nav>
+
+    <!-- ===================================================== -->
+    <!-- UNIFIED EDITORIAL PLACEHOLDER VIEW (CONTENT TBD)      -->
+    <!-- ===================================================== -->
+    <div id="section-modal" class="flex flex-col justify-between">
+        <!-- Top Return Header -->
+        <div class="flex items-center justify-between px-8 md:px-14 py-5 border-b border-[#132A22]/15">
+            <div class="flex items-center gap-3">
+                <span class="w-2.5 h-2.5 rounded-full bg-[#E55B44]"></span>
+                <span class="sans-ui text-[11px] font-bold tracking-[0.28em] text-[#132A22] uppercase">
+                    THE PEOPLE'S OVAL OFFICE // ARCHIVE
+                </span>
+            </div>
+            <button id="close-modal-btn" class="sans-ui text-[11px] font-bold tracking-[0.22em] uppercase px-6 py-2.5 border border-[#132A22] bg-[#132A22] text-[#FAF8F2] hover:bg-[#E55B44] hover:border-[#E55B44] transition-colors cursor-pointer">
+                ← RETURN TO OVAL OFFICE [ESC]
+            </button>
+        </div>
+
+        <!-- Center Editorial Placeholder Box -->
+        <div class="my-auto px-6 py-12 flex flex-col items-center text-center max-w-2xl mx-auto">
+            <div id="tbd-num" class="italic text-lg md:text-xl text-[#E55B44] mb-2">
+                Section I
+            </div>
+            <h1 id="tbd-title" class="text-5xl md:text-7xl font-black tracking-tight text-[#132A22] mb-6">
+                The Candidate
+            </h1>
+            <div class="w-20 h-[2px] bg-[#E55B44] mb-8"></div>
+            <div class="border border-[#132A22]/25 bg-white/70 px-10 py-8 shadow-sm">
+                <div class="sans-ui text-xs font-bold tracking-[0.35em] text-[#1A4D3E] uppercase mb-2">
+                    [ DOSSIER CONTENT PENDING ]
+                </div>
+                <p class="text-base md:text-lg italic text-[#132A22]/70">
+                    This section is currently reserved for upcoming campaign materials, media embeds, and policy documentation.
+                </p>
+            </div>
+        </div>
+
+        <!-- Bottom Subtle Footer -->
+        <div class="px-8 md:px-14 py-4 border-t border-[#132A22]/10 flex justify-between items-center sans-ui text-[10px] tracking-[0.2em] text-[#132A22]/50 uppercase">
+            <span>PRESIDENTIAL CAMPAIGN MANIFESTO</span>
+            <span>STATUS: TO BE DETERMINED</span>
+        </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- Center Coral Laser Seam -->
+    <!-- ========================================== -->
+    <div id="center-seam" class="fixed top-0 left-1/2 -translate-x-1/2 w-[3px] h-full bg-[#E55B44] z-40 scale-y-0 origin-top pointer-events-none shadow-[0_0_20px_#E55B44]"></div>
+
+    <!-- ========================================== -->
+    <!-- Phase 1: Editorial Intro (Split Doors) -->
+    <!-- ========================================== -->
+    <div id="intro-wrapper" class="fixed inset-0 z-30 pointer-events-auto">
+        
+        <!-- Left Door -->
+        <div id="door-left" class="fixed inset-0 bg-[#F4F7F5] flex flex-col items-center justify-center clip-left will-change-transform">
+            <div class="intro-content text-center px-6">
+                <h1 class="text-[#132A22] text-6xl md:text-8xl lg:text-9xl font-black magazine-title">
+                    <div class="line-1 opacity-0 transform translate-y-10">WE ARE SOCIALISTS.</div>
+                    <div class="line-2 opacity-0 transform translate-y-10 mt-2 md:mt-4">AND WE WILL WIN.</div>
+                </h1>
+                <div class="mt-20 md:mt-24 h-10"></div>
+            </div>
+        </div>
+
+        <!-- Right Door -->
+        <div id="door-right" class="fixed inset-0 bg-[#F4F7F5] flex flex-col items-center justify-center clip-right will-change-transform">
+            <div class="intro-content text-center px-6">
+                <h1 class="text-[#132A22] text-6xl md:text-8xl lg:text-9xl font-black magazine-title">
+                    <div class="line-1 opacity-0 transform translate-y-10">WE ARE SOCIALISTS.</div>
+                    <div class="line-2 opacity-0 transform translate-y-10 mt-2 md:mt-4">AND WE WILL WIN.</div>
+                </h1>
+                <div class="mt-20 md:mt-24 h-10"></div>
+            </div>
+        </div>
+
+        <!-- Centered Trigger Button -->
+        <div id="interactive-ui" class="fixed inset-0 flex flex-col items-center justify-center pointer-events-none">
+            <div class="text-center px-6">
+                <h1 class="text-6xl md:text-8xl lg:text-9xl font-black magazine-title invisible">
+                    <div>WE ARE SOCIALISTS.</div>
+                    <div class="mt-2 md:mt-4">AND WE WILL WIN.</div>
+                </h1>
+                <div class="mt-20 md:mt-24 pointer-events-auto">
+                    <button id="enter-btn" class="elegant-button opacity-0 transform translate-y-4 text-xs md:text-sm font-bold text-[#1A4D3E] hover:text-[#E55B44] transition-colors duration-300 pb-2 border-b-2 border-[#1A4D3E]/30 hover:border-[#E55B44] cursor-pointer outline-none">
+                        Click to Enter
+                    </button>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ========================================== -->
+    <!-- 3D Line-Art + Warm Shader Lighting Script  -->
+    <!-- ========================================== -->
+    <script>
+        (function () {
+            'use strict';
+
+            /* --- 1. Scene, Fixed Overview Camera & Renderer --- */
+            const container = document.getElementById('webgl-container');
+            const scene = new THREE.Scene();
+            const BG_HEX = 0xF7F4EB;
+            scene.background = new THREE.Color(BG_HEX);
+            scene.fog = new THREE.Fog(BG_HEX, 13, 28);
+
+            const camera = new THREE.PerspectiveCamera(40, window.innerWidth / window.innerHeight, 0.1, 100);
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+            renderer.setSize(window.innerWidth, window.innerHeight);
+            container.appendChild(renderer.domElement);
+
+            const camRig = {
+                basePos: new THREE.Vector3(0, 3.25, 3.85),
+                lookTarget: new THREE.Vector3(0, 0.92, -0.45),
+                mouseX: 0,
+                mouseY: 0,
+                curX: 0,
+                curY: 0
+            };
+            camera.position.copy(camRig.basePos);
+            camera.lookAt(camRig.lookTarget);
+            window.ovalCamRig = camRig;
+
+            /* --- 2. GLSL Shader (Warm Fireplace + Desk Lamp + Sunbeams) --- */
+            const FILL = new THREE.ShaderMaterial({
+                uniforms: {
+                    uColor: { value: new THREE.Color(0xFAF7EF) },
+                    uTint: { value: new THREE.Color(0xFFFFFF) },
+                    uFireCenter: { value: new THREE.Vector3(-2.95, 0.55, -0.48) },
+                    uFireRadius: { value: 6.5 },
+                    uFireColorNear: { value: new THREE.Color(1.0, 0.58, 0.22) },
+                    uFireColorFar: { value: new THREE.Color(0.85, 0.28, 0.10) },
+                    uFireStrength: { value: 0.72 },
+                    uLampCenter: { value: new THREE.Vector3(0.92, 1.25, -0.45) },
+                    uLampRadius: { value: 4.2 },
+                    uLampColor: { value: new THREE.Color(1.0, 0.86, 0.52) },
+                    uLampStrength: { value: 0.65 },
+                    uSunDir: { value: new THREE.Vector3(0.25, 0.78, 0.55).normalize() },
+                    uTime: { value: 0 }
+                },
+                vertexShader: `
+                    varying vec3 vWorldPos;
+                    varying vec3 vWorldNormal;
+                    void main() {
+                        vec4 worldPos = modelMatrix * vec4(position, 1.0);
+                        vWorldPos = worldPos.xyz;
+                        vWorldNormal = normalize(mat3(modelMatrix) * normal);
+                        gl_Position = projectionMatrix * viewMatrix * worldPos;
+                    }
+                `,
+                fragmentShader: `
+                    uniform vec3 uColor;
+                    uniform vec3 uTint;
+                    uniform vec3 uFireCenter;
+                    uniform float uFireRadius;
+                    uniform vec3 uFireColorNear;
+                    uniform vec3 uFireColorFar;
+                    uniform float uFireStrength;
+                    uniform vec3 uLampCenter;
+                    uniform float uLampRadius;
+                    uniform vec3 uLampColor;
+                    uniform float uLampStrength;
+                    uniform vec3 uSunDir;
+                    uniform float uTime;
+                    varying vec3 vWorldPos;
+                    varying vec3 vWorldNormal;
+
+                    void main() {
+                        vec3 N = normalize(vWorldNormal);
+                        vec3 base = uColor * uTint;
+
+                        float sunDiff = max(0.0, dot(N, uSunDir));
+                        float hemi = 0.5 + 0.5 * N.y;
+                        float ao = smoothstep(-0.2, 0.65, vWorldPos.y);
+                        vec3 col = base * (0.80 + 0.14 * sunDiff + 0.08 * hemi) * (0.90 + 0.10 * ao);
+
+                        if (uFireStrength > 0.002) {
+                            vec3 toFire = uFireCenter - vWorldPos;
+                            float dF = length(toFire);
+                            vec3 dirF = toFire / max(dF, 0.001);
+                            float ndlF = smoothstep(-0.15, 0.55, dot(N, dirF));
+                            float tF = clamp(1.0 - dF / uFireRadius, 0.0, 1.0);
+                            float attenF = tF * tF * 0.75 + tF * 0.25;
+                            vec3 fCol = mix(uFireColorFar, uFireColorNear, tF);
+                            float flick = 0.88 + 0.08 * sin(uTime * 6.5 + dF * 1.4) + 0.04 * sin(uTime * 12.3 + 1.9);
+                            col += fCol * uFireStrength * flick * attenF * (0.35 + 0.65 * ndlF) * 0.36;
+                        }
+
+                        if (uLampStrength > 0.002) {
+                            vec3 toL = uLampCenter - vWorldPos;
+                            float dL = length(toL);
+                            vec3 dirL = toL / max(dL, 0.001);
+                            float ndlL = smoothstep(-0.1, 0.5, dot(N, dirL));
+                            float tL = clamp(1.0 - dL / uLampRadius, 0.0, 1.0);
+                            float attenL = tL * tL * 0.8 + tL * 0.2;
+                            col += uLampColor * uLampStrength * attenL * (0.3 + 0.7 * ndlL) * 0.34;
+                        }
+
+                        float radial = length(vWorldPos.xz) * 0.045;
+                        col *= clamp(1.03 - radial * 0.25, 0.82, 1.03);
+
+                        gl_FragColor = vec4(col, 1.0);
+                    }
+                `,
+                side: THREE.DoubleSide,
+                polygonOffset: true,
+                polygonOffsetFactor: 1,
+                polygonOffsetUnits: 1
+            });
+
+            function LITMAT(hex, opts) {
+                const u = { uTint: { value: new THREE.Color(hex) } };
+                for (const k in FILL.uniforms) if (k !== 'uTint') u[k] = FILL.uniforms[k];
+                const m = new THREE.ShaderMaterial({
+                    uniforms: u,
+                    vertexShader: FILL.vertexShader,
+                    fragmentShader: FILL.fragmentShader,
+                    side: THREE.DoubleSide,
+                    polygonOffset: true,
+                    polygonOffsetFactor: 1,
+                    polygonOffsetUnits: 1
+                });
+                if (opts) for (const k in opts) m[k] = opts[k];
+                return m;
+            }
+
+            const MAT_WALL = LITMAT(0xF6F2E8);
+            const MAT_FLOOR = LITMAT(0xE8DFCE);
+            const MAT_RUG = LITMAT(0x1D4D3E);
+            const MAT_WOOD_DARK = LITMAT(0x6E472B);
+            const MAT_WOOD_MID = LITMAT(0x94633E);
+            const MAT_WOOD_LIGHT = LITMAT(0xBA8C63);
+            const MAT_DESK_PAD = LITMAT(0x163D30);
+            const MAT_LEATHER = LITMAT(0x7C2D26);
+            const MAT_CORAL = LITMAT(0xE55B44);
+            const MAT_GOLD = LITMAT(0xD9A441);
+            const MAT_BRONZE = LITMAT(0x9C7238);
+            const MAT_SILVER = LITMAT(0xDCE2E6);
+            const MAT_CREAM = LITMAT(0xFCF9F0);
+            const MAT_GREEN_SHADE = LITMAT(0x1E6B4E);
+            const MAT_BLUE_OCEAN = LITMAT(0x6BA4B8);
+            const MAT_GLASS = new THREE.MeshBasicMaterial({
+                color: 0xDDF0F5,
+                transparent: true,
+                opacity: 0.36,
+                depthWrite: false,
+                side: THREE.DoubleSide
+            });
+
+            const LINE_DARK = new THREE.LineBasicMaterial({ color: 0x132A22 });
+            const LINE_SOFT = new THREE.LineBasicMaterial({ color: 0x7A8880, transparent: true, opacity: 0.65 });
+            const LINE_FAINT = new THREE.LineBasicMaterial({ color: 0xC8C2B4, transparent: true, opacity: 0.55 });
+            const LINE_CORAL = new THREE.LineBasicMaterial({ color: 0xE55B44 });
+            const LINE_GOLD = new THREE.LineBasicMaterial({ color: 0xB58322 });
+
+            const V = (x, y, z) => new THREE.Vector3(x, y, z);
+            const geo = pts => new THREE.BufferGeometry().setFromPoints(pts.map(p => V(p[0], p[1], p[2])));
+            const line = (pts, m) => new THREE.Line(geo(pts), m || LINE_DARK);
+            const iline = pts => new THREE.Line(geo(pts), LINE_SOFT);
+            const lloop = (pts, m) => new THREE.LineLoop(geo(pts), m || LINE_DARK);
+
+            function edge(g, threshold = 12, lmat = LINE_DARK, fmat = FILL) {
+                const grp = new THREE.Group();
+                grp.add(new THREE.Mesh(g, fmat));
+                grp.add(new THREE.LineSegments(new THREE.EdgesGeometry(g, threshold), lmat));
+                return grp;
+            }
+            const box = (w, h, d, fmat = FILL, lmat = LINE_DARK) => edge(new THREE.BoxGeometry(w, h, d), 12, lmat, fmat);
+            const cyl = (rt, rb, h, seg = 12, fmat = FILL, lmat = LINE_DARK) => edge(new THREE.CylinderGeometry(rt, rb, h, seg), 18, lmat, fmat);
+
+            function put(o, x, y, z, rx, ry, rz, parent) {
+                o.position.set(x, y, z);
+                if (rx) o.rotation.x = rx;
+                if (ry) o.rotation.y = ry;
+                if (rz) o.rotation.z = rz;
+                (parent || scene).add(o);
+                return o;
+            }
+
+            function ringPts(r, seg = 36, y = 0) {
+                const pts = [];
+                for (let i = 0; i < seg; i++) {
+                    const a = (i / seg) * Math.PI * 2;
+                    pts.push([Math.cos(a) * r, y, Math.sin(a) * r]);
+                }
+                return pts;
+            }
+
+            /* --- 3. Interaction & Non-Bouncing Smooth Slide Registry --- */
+            const interactables = [];
+            const interactMeshes = [];
+            const hinges = [];
+            const slides = [];
+
+            function regInteract(obj, label, fn) {
+                obj.userData.aimLabel = label;
+                obj.userData.onTrigger = fn;
+                interactables.push(obj);
+                obj.traverse(c => {
+                    if (c.isMesh && !c.userData.noHit) {
+                        c.userData.interactRoot = obj;
+                        interactMeshes.push(c);
+                    }
+                });
+                return obj;
+            }
+
+            function regHinge(pivot, axis, baseRot, deltaRot, label) {
+                pivot.userData.spring = { cur: 0, open: false, axis, base: baseRot, delta: deltaRot };
+                hinges.push(pivot);
+                regInteract(pivot, label, () => {
+                    pivot.userData.spring.open = !pivot.userData.spring.open;
+                });
+            }
+
+            function regSlide(obj, axis, dist, label) {
+                obj.userData.slide = { cur: 0, open: false, base: obj.position[axis], axis, dist };
+                slides.push(obj);
+                regInteract(obj, label, () => {
+                    obj.userData.slide.open = !obj.userData.slide.open;
+                });
+            }
+
+            /* ========================================================================= */
+            /* 4. OVAL OFFICE ARCHITECTURE, FLOOR, RUG, SUNBEAMS & WINDOWS               */
+            /* ========================================================================= */
+            const RX = 4.9, RZ = 3.8;
+
+            put(new THREE.Mesh(new THREE.PlaneGeometry(60, 60), MAT_FLOOR), 0, -0.01, 0, -Math.PI / 2, 0, 0);
+            for (let x = -5.5; x <= 5.5; x += 0.55) {
+                put(line([[x, 0.002, -4.5], [x, 0.002, 4.0]], LINE_FAINT), 0, 0, 0);
+            }
+
+            const rugG = new THREE.Group();
+            put(rugG, 0, 0.005, -0.2);
+            {
+                const rShape = new THREE.Shape();
+                rShape.absellipse(0, 0, 3.4, 2.35, 0, Math.PI * 2, false, 0);
+                const rGeo = new THREE.ExtrudeGeometry(rShape, { depth: 0.016, bevelEnabled: false, curveSegments: 64 });
+                rGeo.rotateX(Math.PI / 2);
+                put(edge(rGeo, 30, LINE_DARK, MAT_RUG), 0, 0.016, 0, 0, 0, 0, rugG);
+
+                for (const [rx, rz, m] of [[3.22, 2.20, LINE_GOLD], [3.08, 2.08, LINE_CORAL], [1.15, 0.80, LINE_GOLD]]) {
+                    const pts = [];
+                    for (let i = 0; i < 64; i++) {
+                        const a = (i / 64) * Math.PI * 2;
+                        pts.push([Math.cos(a) * rx, 0.02, Math.sin(a) * rz]);
+                    }
+                    rugG.add(lloop(pts, m));
+                }
+            }
+
+            const winAngles = [-Math.PI / 2 - 0.34, -Math.PI / 2, -Math.PI / 2 + 0.34];
+            const N_SEGS = 28;
+            for (let i = 0; i < N_SEGS; i++) {
+                const a0 = Math.PI - 0.15 + (i / N_SEGS) * (Math.PI + 0.30);
+                const a1 = Math.PI - 0.15 + ((i + 1) / N_SEGS) * (Math.PI + 0.30);
+                const amid = (a0 + a1) / 2;
+                const normA = Math.atan2(Math.sin(amid), Math.cos(amid));
+
+                const x0 = Math.cos(a0) * RX, z0 = Math.sin(a0) * RZ;
+                const x1 = Math.cos(a1) * RX, z1 = Math.sin(a1) * RZ;
+                const segW = Math.hypot(x1 - x0, z1 - z0) + 0.02;
+                const cx = (x0 + x1) / 2, cz = (z0 + z1) / 2;
+                const rotY = -Math.atan2(z1 - z0, x1 - x0);
+
+                let isWin = false;
+                for (const wa of winAngles) if (Math.abs(normA - wa) < 0.115) isWin = true;
+
+                const segG = new THREE.Group();
+                put(segG, cx, 0, cz, 0, rotY, 0);
+
+                if (isWin) {
+                    put(box(segW, 0.72, 0.18, MAT_WALL), 0, 0.36, 0, 0, 0, 0, segG);
+                    put(box(segW - 0.12, 0.46, 0.20, MAT_CREAM, LINE_SOFT), 0, 0.36, 0, 0, 0, 0, segG);
+                    put(box(segW, 0.55, 0.18, MAT_WALL), 0, 3.85, 0, 0, 0, 0, segG);
+                } else {
+                    put(box(segW, 4.1, 0.18, MAT_WALL), 0, 2.05, 0, 0, 0, 0, segG);
+                    put(box(segW + 0.02, 0.85, 0.21, MAT_CREAM), 0, 0.425, 0, 0, 0, 0, segG);
+                    put(box(segW - 0.14, 0.55, 0.23, MAT_WALL, LINE_SOFT), 0, 0.425, 0, 0, 0, 0, segG);
+                    put(box(segW - 0.14, 2.45, 0.20, MAT_WALL, LINE_SOFT), 0, 2.25, 0, 0, 0, 0, segG);
+                }
+                put(box(segW + 0.04, 0.16, 0.26, MAT_CREAM), 0, 4.18, 0, 0, 0, 0, segG);
+            }
+
+            const sunbeamMat = new THREE.MeshBasicMaterial({
+                color: 0xFFF3D1,
+                transparent: true,
+                opacity: 0.07,
+                depthWrite: false,
+                side: THREE.DoubleSide,
+                blending: THREE.AdditiveBlending
+            });
+
+            winAngles.forEach((wa, idx) => {
+                const wx = Math.cos(wa) * RX, wz = Math.sin(wa) * RZ;
+                const rotY = -Math.atan2(Math.cos(wa) * RZ, -Math.sin(wa) * RX);
+                const wf = new THREE.Group();
+                put(wf, wx, 0.72, wz, 0, rotY, 0);
+
+                for (const s of [-1, 1]) {
+                    put(cyl(0.075, 0.085, 3.1, 10, MAT_CREAM), s * 0.54, 1.55, 0.08, 0, 0, 0, wf);
+                    const curt = new THREE.Group();
+                    put(curt, s * 0.44, 1.48, 0.14, 0, 0, s * 0.03, wf);
+                    put(box(0.18, 2.95, 0.08, MAT_CORAL), 0, 0, 0, 0, 0, 0, curt);
+                    for (const px of [-0.04, 0.04]) {
+                        put(iline([[px, -1.45, 0.045], [px, 1.45, 0.045]]), 0, 0, 0, 0, 0, 0, curt);
+                    }
+                }
+                put(box(1.18, 0.18, 0.22, MAT_GOLD), 0, 2.98, 0.14, 0, 0, 0, wf);
+
+                const beamGeo = new THREE.CylinderGeometry(0.38, 0.78, 4.2, 16, 1, true);
+                const beam = new THREE.Mesh(beamGeo, sunbeamMat);
+                beam.userData.noHit = true;
+                put(beam, 0, 0.6, 1.45, 0.62, 0, 0, wf);
+
+                const sashPivot = new THREE.Group();
+                put(sashPivot, -0.42, 1.24, 0, 0, 0, 0, wf);
+                const sash = new THREE.Group();
+                put(sash, 0.42, 0, 0, 0, 0, 0, sashPivot);
+                put(box(0.84, 2.45, 0.05, MAT_GLASS, LINE_DARK), 0, 0, 0, 0, 0, 0, sash);
+                for (const y of [-0.8, -0.25, 0.3, 0.85]) put(box(0.82, 0.03, 0.06, MAT_CREAM), 0, y, 0, 0, 0, 0, sash);
+                put(box(0.03, 2.42, 0.06, MAT_CREAM), 0, 0, 0, 0, 0, 0, sash);
+
+                regHinge(sashPivot, 'y', 0, -1.1, `OPEN / CLOSE ARCHED WINDOW #${idx + 1}`);
+            });
+
+            {
+                const obelisk = new THREE.Group();
+                put(obelisk, 0, 0, -15.5);
+                put(cyl(0.22, 0.52, 7.5, 4, MAT_CREAM, LINE_SOFT), 0, 3.75, 0, 0, Math.PI / 4, 0, obelisk);
+                put(edge(new THREE.ConeGeometry(0.31, 0.65, 4), 1, LINE_CORAL, MAT_CORAL), 0, 7.82, 0, 0, Math.PI / 4, 0, obelisk);
+                for (const tx of [-3.2, -1.9, 1.9, 3.2]) {
+                    const tr = new THREE.Group();
+                    put(tr, tx, 0, -8.0);
+                    put(cyl(0.06, 0.09, 0.8, 6, MAT_WOOD_DARK), 0, 0.4, 0, 0, 0, 0, tr);
+                    put(edge(new THREE.ConeGeometry(0.62, 1.5, 7), 12, LINE_DARK, MAT_RUG), 0, 1.4, 0, 0, 0, 0, tr);
+                    put(edge(new THREE.ConeGeometry(0.45, 1.2, 7), 12, LINE_DARK, MAT_RUG), 0, 2.2, 0, 0, 0, 0, tr);
+                }
+            }
+
+            /* ========================================================================= */
+            /* 5. OVAL OFFICE FLAGS: US STARS & STRIPES + SOCIALIST ROSE & FIST FLAG     */
+            /* ========================================================================= */
+            const flags = [];
+            function makeDetailedFlag(x, z, ry, label, type) {
+                const fg = new THREE.Group();
+                put(fg, x, 0, z, 0, ry, 0);
+                put(cyl(0.16, 0.20, 0.06, 14, MAT_GOLD), 0, 0.03, 0, 0, 0, 0, fg);
+                put(cyl(0.024, 0.028, 3.05, 10, MAT_GOLD), 0, 1.55, 0, 0, 0, 0, fg);
+                put(edge(new THREE.OctahedronGeometry(0.075), 1, LINE_GOLD, MAT_GOLD), 0, 3.14, 0, 0, 0, 0, fg);
+                fg.add(line([[0.02, 2.95, 0], [0.12, 2.65, 0.04]], LINE_GOLD));
+                fg.add(line([[0.02, 2.95, 0], [0.09, 2.60, -0.04]], LINE_GOLD));
+
+                const fCv = document.createElement('canvas');
+                fCv.width = 256; fCv.height = 160;
+                const ctx = fCv.getContext('2d');
+                if (type === 'us') {
+                    for (let s = 0; s < 13; s++) {
+                        ctx.fillStyle = (s % 2 === 0) ? '#B22234' : '#FAF8F2';
+                        ctx.fillRect(0, s * (160 / 13), 256, 160 / 13 + 1);
+                    }
+                    ctx.fillStyle = '#1E335A';
+                    ctx.fillRect(0, 0, 112, 86);
+                    ctx.fillStyle = '#FAF8F2';
+                    for (let r = 0; r < 5; r++) {
+                        for (let c = 0; c < 6; c++) {
+                            ctx.beginPath();
+                            ctx.arc(12 + c * 17.5, 11 + r * 16, 2.8, 0, Math.PI * 2);
+                            ctx.fill();
+                        }
+                    }
+                    ctx.strokeStyle = '#D9A441'; ctx.lineWidth = 4; ctx.strokeRect(2, 2, 252, 156);
+                } else {
+                    ctx.fillStyle = '#B82025';
+                    ctx.fillRect(0, 0, 256, 160);
+                    ctx.strokeStyle = '#F2C14E';
+                    ctx.lineWidth = 6;
+                    ctx.strokeRect(4, 4, 248, 152);
+                    ctx.strokeStyle = '#F2C14E';
+                    ctx.lineWidth = 3.5;
+                    ctx.beginPath();
+                    ctx.arc(128, 80, 48, 0, Math.PI * 2);
+                    ctx.stroke();
+                    for (let i = 0; i < 16; i++) {
+                        const a = (i / 16) * Math.PI * 2;
+                        ctx.beginPath();
+                        ctx.moveTo(128 + Math.cos(a) * 48, 80 + Math.sin(a) * 48);
+                        ctx.lineTo(128 + Math.cos(a) * 55, 80 + Math.sin(a) * 55);
+                        ctx.stroke();
+                    }
+                    ctx.fillStyle = '#FAF8F2';
+                    ctx.font = 'bold 42px serif';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText('✊', 114, 82);
+                    ctx.font = '38px serif';
+                    ctx.fillText('🌹', 146, 80);
+                    ctx.fillStyle = '#F2C14E';
+                    ctx.font = 'bold 11px Inter, sans-serif';
+                    ctx.fillText('WORKERS OF THE WORLD', 128, 18);
+                }
+                const fTex = new THREE.CanvasTexture(fCv);
+                const fMat = new THREE.MeshBasicMaterial({ map: fTex, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
+
+                const clothPivot = new THREE.Group();
+                put(clothPivot, 0, 2.45, 0, 0, 0, 0, fg);
+                const clothGeo = new THREE.BoxGeometry(0.88, 0.56, 0.022, 8, 1, 1);
+                const posAttr = clothGeo.attributes.position;
+                for (let i = 0; i < posAttr.count; i++) {
+                    const vx = posAttr.getX(i);
+                    posAttr.setZ(i, posAttr.getZ(i) + Math.sin((vx + 0.44) * 7.0) * 0.035);
+                }
+                clothGeo.computeVertexNormals();
+                const clothMesh = new THREE.Mesh(clothGeo, [MAT_GOLD, MAT_GOLD, MAT_GOLD, MAT_GOLD, fMat, fMat]);
+                clothMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(clothGeo, 25), LINE_DARK));
+                put(clothMesh, 0.45, 0, 0, 0.08, 0, -0.08, clothPivot);
+
+                const fState = { pivot: clothPivot, waveT: 0, baseRy: 0 };
+                flags.push(fState);
+                regInteract(fg, label, () => { fState.waveT = 3.2; });
+            }
+            makeDetailedFlag(-1.42, -2.05, 0.35, 'WAVE UNITED STATES FLAG (STARS & STRIPES)', 'us');
+            makeDetailedFlag(1.42, -2.05, -0.35, 'WAVE DEMOCRATIC SOCIALIST RED FLAG (ROSE & FIST)', 'socialist');
+
+            /* ========================================================================= */
+            /* 6. LEFT SIDE OF SCREEN: MARBLE FIREPLACE & AGENDA EASEL                   */
+            /* ========================================================================= */
+            const FP_X = -3.05, FP_Z = -0.48, FP_RY = 0.62;
+            const fpGroup = new THREE.Group();
+            put(fpGroup, FP_X, 0, FP_Z, 0, FP_RY, 0);
+
+            put(box(1.65, 0.10, 0.65, MAT_CREAM), 0, 0.05, 0, 0, 0, 0, fpGroup);
+            put(box(0.36, 1.25, 0.52, MAT_CREAM), -0.58, 0.675, 0, 0, 0, 0, fpGroup);
+            put(box(0.36, 1.25, 0.52, MAT_CREAM), 0.58, 0.675, 0, 0, 0, 0, fpGroup);
+            put(box(1.56, 0.28, 0.52, MAT_CREAM), 0, 1.18, 0, 0, 0, 0, fpGroup);
+            put(box(1.78, 0.10, 0.66, MAT_RUG), 0, 1.37, 0, 0, 0, 0, fpGroup);
+            put(box(0.92, 0.95, 0.10, MAT_LEATHER), 0, 0.55, -0.18, 0, 0, 0, fpGroup);
+
+            for (const sx of [-0.62, 0.62]) {
+                put(cyl(0.08, 0.06, 0.14, 8, MAT_CORAL), sx, 1.49, 0, 0, 0, 0, fpGroup);
+                put(edge(new THREE.SphereGeometry(0.12, 8, 6), 12, LINE_DARK, MAT_RUG), sx, 1.64, 0, 0, 0, 0, fpGroup);
+            }
+            put(box(0.32, 0.22, 0.12, MAT_GOLD), 0, 1.53, 0, 0, 0, 0, fpGroup);
+
+            put(cyl(0.05, 0.05, 0.55, 7, MAT_WOOD_DARK), 0, 0.15, 0.04, 0, 0.2, Math.PI / 2, fpGroup);
+            put(cyl(0.05, 0.05, 0.55, 7, MAT_WOOD_DARK), 0, 0.19, -0.04, 0, -0.25, Math.PI / 2, fpGroup);
+
+            const flames = [];
+            let fireLit = true;
+            for (let i = 0; i < 4; i++) {
+                const cone = edge(
+                    new THREE.ConeGeometry(0.13 - i * 0.02, 0.42 - i * 0.05, 7),
+                    10,
+                    i % 2 === 0 ? LINE_CORAL : LINE_GOLD,
+                    i % 2 === 0 ? MAT_CORAL : MAT_GOLD
+                );
+                put(cone, (i - 1.5) * 0.09, 0.32, 0.02, 0, 0, 0, fpGroup);
+                flames.push({ mesh: cone, ph: i * 1.5 });
+            }
+
+            regInteract(fpGroup, 'IGNITE / EXTINGUISH OVAL OFFICE FIREPLACE', () => {
+                fireLit = !fireLit;
+                flames.forEach(f => f.mesh.visible = fireLit);
+            });
+
+            const portraitG = new THREE.Group();
+            put(portraitG, FP_X, 2.28, FP_Z, 0, FP_RY, 0);
+            put(box(1.18, 1.28, 0.07, MAT_GOLD), 0, 0, -0.18, 0, 0, 0, portraitG);
+            const artCv = document.createElement('canvas');
+            artCv.width = 256; artCv.height = 280;
+            const actx = artCv.getContext('2d');
+            const artTex = new THREE.CanvasTexture(artCv);
+            const ART_THEMES = [
+                { bg: '#132A22', fg: '#E55B44', sub: '#FAF8F2', title: 'SOLIDARITY', year: 'FOR THE WORKING CLASS', sym: '✊' },
+                { bg: '#E55B44', fg: '#FAF8F2', sub: '#132A22', title: 'NEW DEAL II', year: 'ECONOMIC BILL OF RIGHTS', sym: '🌹' },
+                { bg: '#1A4D3E', fg: '#D9A441', sub: '#FAF8F2', title: 'PEOPLE\'S HOUSE', year: 'WASHINGTON D.C.', sym: '★' }
+            ];
+            let artIdx = 0;
+            function drawPortrait(idx) {
+                const t = ART_THEMES[idx];
+                actx.fillStyle = t.bg; actx.fillRect(0, 0, 256, 280);
+                actx.strokeStyle = t.fg; actx.lineWidth = 6; actx.strokeRect(12, 12, 232, 256);
+                actx.fillStyle = t.fg; actx.font = '72px serif'; actx.textAlign = 'center';
+                actx.fillText(t.sym, 128, 118);
+                actx.fillStyle = t.sub; actx.font = 'bold 24px "Playfair Display", serif';
+                actx.fillText(t.title, 128, 192);
+                actx.font = 'bold 12px Inter, sans-serif'; actx.fillStyle = t.fg;
+                actx.fillText(t.year, 128, 224);
+                artTex.needsUpdate = true;
+            }
+            drawPortrait(0);
+            const artPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.02, 1.12), new THREE.MeshBasicMaterial({ map: artTex }));
+            put(artPlane, 0, 0, -0.14, 0, 0, 0, portraitG);
+            regInteract(portraitG, 'CYCLE PRESIDENTIAL PORTRAIT MURAL ABOVE MANTEL', () => {
+                artIdx = (artIdx + 1) % ART_THEMES.length;
+                drawPortrait(artIdx);
+            });
+
+            // Campaign Strategy Easel with 3 Editable Sticky Notes
+            const easelG = new THREE.Group();
+            put(easelG, -1.72, 0, -1.48, 0, 0.36, 0);
+            put(cyl(0.025, 0.025, 1.95, 6, MAT_WOOD_MID), -0.48, 0.96, 0, 0.06, 0, 0.05, easelG);
+            put(cyl(0.025, 0.025, 1.95, 6, MAT_WOOD_MID), 0.48, 0.96, 0, 0.06, 0, -0.05, easelG);
+            put(cyl(0.025, 0.025, 1.85, 6, MAT_WOOD_MID), 0, 0.90, -0.42, 0.30, 0, 0, easelG);
+
+            const boardPanel = new THREE.Group();
+            put(boardPanel, 0, 1.24, 0.05, -0.06, 0, 0, easelG);
+            put(box(1.22, 0.88, 0.05, MAT_WOOD_DARK), 0, 0, 0, 0, 0, 0, boardPanel);
+
+            const bCv = document.createElement('canvas');
+            bCv.width = 512; bCv.height = 360;
+            const bctx = bCv.getContext('2d');
+            bctx.fillStyle = '#132A22'; bctx.fillRect(0, 0, 512, 360);
+            bctx.strokeStyle = '#D9A441'; bctx.lineWidth = 5; bctx.strokeRect(12, 12, 488, 336);
+            bctx.fillStyle = '#E55B44'; bctx.font = 'bold 24px Inter, sans-serif';
+            bctx.fillText('★ FIRST 100 DAYS AGENDA', 34, 52);
+            bctx.strokeStyle = '#FAF8F2'; bctx.lineWidth = 2;
+            bctx.beginPath(); bctx.moveTo(34, 66); bctx.lineTo(478, 66); bctx.stroke();
+            bctx.fillStyle = '#FAF8F2'; bctx.font = 'bold 17px monospace';
+            bctx.fillText('01. UNIVERSAL HEALTHCARE ACT', 34, 102);
+            bctx.fillText('02. GREEN NEW DEAL & HIGH-SPEED RAIL', 34, 134);
+            bctx.fillText('03. WEALTH TAX & WORKER CO-OPS', 34, 166);
+            const bTex = new THREE.CanvasTexture(bCv);
+            const bPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.12, 0.78), new THREE.MeshBasicMaterial({ map: bTex }));
+            put(bPlane, 0, 0, 0.028, 0, 0, 0, boardPanel);
+
+            const notes = [
+                { col: '#FFE66D', txt: 'PASS RAIL BILL', px: -0.35, py: -0.16, rz: 0.07 },
+                { col: '#FFB3C6', txt: 'TAX THE RICH', px: 0.0, py: -0.14, rz: -0.05 },
+                { col: '#AECDFF', txt: 'MEDICARE 4 ALL', px: 0.35, py: -0.16, rz: 0.09 }
+            ];
+            let editingIdx = 0;
+            function drawNote(i) {
+                const n = notes[i];
+                const c = n.ctx;
+                c.fillStyle = n.col; c.fillRect(0, 0, 128, 128);
+                c.strokeStyle = '#132A22'; c.lineWidth = 4; c.strokeRect(2, 2, 124, 124);
+                c.fillStyle = 'rgba(19,42,34,0.15)'; c.fillRect(36, 0, 56, 14);
+                c.fillStyle = '#132A22';
+                const sz = n.txt.length <= 10 ? 17 : 13;
+                c.font = `bold ${sz}px Inter, monospace`;
+                c.textAlign = 'center'; c.textBaseline = 'middle';
+                c.fillText(n.txt, 64, 68);
+                n.tex.needsUpdate = true;
+            }
+            notes.forEach((n, idx) => {
+                n.canvas = document.createElement('canvas');
+                n.canvas.width = 128; n.canvas.height = 128;
+                n.ctx = n.canvas.getContext('2d');
+                n.tex = new THREE.CanvasTexture(n.canvas);
+                drawNote(idx);
+
+                const ng = new THREE.Group();
+                const faceM = new THREE.MeshBasicMaterial({ map: n.tex });
+                const bg = new THREE.BoxGeometry(0.24, 0.24, 0.012);
+                ng.add(new THREE.Mesh(bg, [MAT_CREAM, MAT_CREAM, MAT_CREAM, MAT_CREAM, faceM, MAT_CREAM]));
+                ng.add(new THREE.LineSegments(new THREE.EdgesGeometry(bg), LINE_DARK));
+                put(ng, n.px, n.py, 0.036, 0, 0, n.rz, boardPanel);
+
+                regInteract(ng, `EDIT CAMPAIGN STICKY NOTE #${idx + 1} ("${n.txt}")`, () => {
+                    editingIdx = idx;
+                    const ed = document.getElementById('noteEditor');
+                    const inp = document.getElementById('noteInput');
+                    inp.value = notes[idx].txt;
+                    ed.classList.add('show');
+                    inp.focus();
+                    inp.select();
+                });
+            });
+
+            function applyStickyNote() {
+                const inp = document.getElementById('noteInput');
+                notes[editingIdx].txt = (inp.value.trim() || 'SOLIDARITY').toUpperCase();
+                drawNote(editingIdx);
+                document.getElementById('noteEditor').classList.remove('show');
+                inp.blur();
+            }
+            document.getElementById('noteOk').addEventListener('click', applyStickyNote);
+            document.getElementById('noteInput').addEventListener('keydown', e => {
+                if (e.key === 'Enter') applyStickyNote();
+                if (e.key === 'Escape') document.getElementById('noteEditor').classList.remove('show');
+                e.stopPropagation();
+            });
+
+            /* ========================================================================= */
+            /* 7. RIGHT SIDE: HOLLOW OPEN-CAVITY BOOKCASE + 3 TOP-SHELF ARTIFACTS        */
+            /* ========================================================================= */
+            const bookcase = new THREE.Group();
+            put(bookcase, 2.55, 0, -0.95, 0, -0.55, 0);
+
+            // Rebuilt as true hollow open cabinetry (Back panel + Side walls + Plinth + Roof) so shelves are never occluded!
+            put(box(1.42, 2.36, 0.04, MAT_WOOD_DARK), 0, 1.18, -0.16, 0, 0, 0, bookcase); // Thin Back Panel
+            put(box(1.46, 0.34, 0.38, MAT_WOOD_DARK), 0, 0.17, 0.01, 0, 0, 0, bookcase);  // Lower Base Cabinet
+            put(box(1.50, 0.08, 0.42, MAT_WOOD_DARK), 0, 0.04, 0.02, 0, 0, 0, bookcase);  // Bottom Plinth
+            put(box(0.06, 2.02, 0.36, MAT_WOOD_DARK), -0.68, 1.35, 0.0, 0, 0, 0, bookcase); // Left Side Wall
+            put(box(0.06, 2.02, 0.36, MAT_WOOD_DARK), 0.68, 1.35, 0.0, 0, 0, 0, bookcase);  // Right Side Wall
+            put(box(1.42, 0.05, 0.38, MAT_WOOD_DARK), 0, 2.35, 0.01, 0, 0, 0, bookcase);  // Top Roof Board
+
+            // Fluted Front Side Pilasters with Vertical Groove Lines
+            for (const sx of [-0.68, 0.68]) {
+                put(box(0.09, 2.32, 0.06, MAT_WOOD_MID), sx, 1.18, 0.19, 0, 0, 0, bookcase);
+                for (const gx of [-0.022, 0, 0.022]) {
+                    bookcase.add(line([[sx + gx, 0.12, 0.223], [sx + gx, 2.28, 0.223]], LINE_DARK));
+                }
+                put(box(0.11, 0.05, 0.08, MAT_GOLD), sx, 2.28, 0.19, 0, 0, 0, bookcase);
+                put(box(0.11, 0.05, 0.08, MAT_GOLD), sx, 0.35, 0.19, 0, 0, 0, bookcase);
+            }
+            // Crown Entablature & Dentil Moulding Teeth (Placed cleanly above y = 2.36)
+            put(box(1.52, 0.10, 0.44, MAT_GOLD), 0, 2.42, 0.02, 0, 0, 0, bookcase);
+            for (let dx = -0.64; dx <= 0.64; dx += 0.08) {
+                put(box(0.04, 0.032, 0.04, MAT_CREAM), dx, 2.355, 0.21, 0, 0, 0, bookcase);
+            }
+            // Vertical Backboard Plank Lines visible inside the open compartments
+            for (let bx = -0.52; bx <= 0.52; bx += 0.13) {
+                bookcase.add(iline([[bx, 0.36, -0.135], [bx, 2.32, -0.135]]));
+            }
+
+            // Shelves at y = 0.85, 1.35, and 1.85 (Leaving a tall 48cm open gallery bay on the Top Shelf!)
+            for (const sy of [0.35, 0.85, 1.35, 1.85]) {
+                put(box(1.30, 0.04, 0.36, MAT_WOOD_LIGHT), 0, sy, 0.01, 0, 0, 0, bookcase);
+                bookcase.add(line([[-0.63, sy + 0.012, 0.192], [0.63, sy + 0.012, 0.192]], LINE_GOLD));
+                bookcase.add(line([[-0.63, sy - 0.012, 0.192], [0.63, sy - 0.012, 0.192]], LINE_DARK));
+            }
+
+            // Detailed Books on Lower 3 Compartments (y = 0.37, 0.87, 1.37)
+            const bookMats = [MAT_CORAL, MAT_RUG, MAT_GOLD, MAT_LEATHER, MAT_BLUE_OCEAN, MAT_CREAM];
+            const shelfYs = [0.37, 0.87, 1.37];
+            for (let row = 0; row < 3; row++) {
+                const by = shelfYs[row];
+                for (let k = -4; k <= 4; k++) {
+                    const bMat = bookMats[Math.abs(k * 3 + row * 2) % bookMats.length];
+                    const bh = 0.32 + (Math.abs(k + row) % 3) * 0.035;
+                    const bw = 0.092;
+                    const bd = 0.24;
+
+                    const bk = new THREE.Group();
+                    put(bk, k * 0.122, by + bh / 2, 0.05, 0, 0, 0, bookcase);
+                    put(box(bw, bh, bd, bMat), 0, 0, 0, 0, 0, 0, bk);
+                    put(box(bw - 0.016, 0.012, bd - 0.016, MAT_CREAM), 0, bh / 2 + 0.002, -0.004, 0, 0, 0, bk);
+                    const sz = bd / 2 + 0.002;
+                    bk.add(line([[-bw * 0.42, bh * 0.32, sz], [bw * 0.42, bh * 0.32, sz]], LINE_GOLD));
+                    bk.add(line([[-bw * 0.42, bh * 0.24, sz], [bw * 0.42, bh * 0.24, sz]], LINE_GOLD));
+                    bk.add(line([[-bw * 0.42, -bh * 0.28, sz], [bw * 0.42, -bh * 0.28, sz]], LINE_GOLD));
+                    bk.add(line([[-bw * 0.42, -bh * 0.36, sz], [bw * 0.42, -bh * 0.36, sz]], LINE_GOLD));
+                    bk.add(lloop([
+                        [-bw * 0.32, -bh * 0.08, sz], [bw * 0.32, -bh * 0.08, sz],
+                        [bw * 0.32, bh * 0.14, sz], [-bw * 0.32, bh * 0.14, sz]
+                    ], LINE_DARK));
+
+                    regSlide(bk, 'z', 0.18, `PULL & INSPECT ARCHIVE VOLUME #${row * 9 + k + 5}`);
+                }
+            }
+
+            /* --- OPEN TOP SHELF GALLERY BAY (y = 1.87 to 2.32) — 3 CLEARLY VISIBLE ARTIFACTS --- */
+            const TOP_SHELF_Y = 1.87;
+
+            // Top-Shelf Item 1 (Left): Brass Armillary Astrolabe
+            const astroG = new THREE.Group();
+            put(astroG, -0.40, TOP_SHELF_Y, 0.05, 0, 0, 0, bookcase);
+            put(cyl(0.068, 0.088, 0.03, 12, MAT_GOLD), 0, 0.015, 0, 0, 0, 0, astroG);
+            put(cyl(0.016, 0.022, 0.06, 8, MAT_GOLD), 0, 0.055, 0, 0, 0, 0, astroG);
+            const astroRings = [];
+            for (const [r, rx, ry, spd] of [[0.125, 0.3, 0, 1.8], [0.10, -0.4, 0.6, -2.4], [0.075, 1.1, -0.3, 3.1]]) {
+                const rg = new THREE.Group();
+                put(rg, 0, 0.20, 0, rx, ry, 0, astroG);
+                rg.add(edge(new THREE.TorusGeometry(r, 0.007, 6, 24), 15, LINE_GOLD, MAT_GOLD));
+                astroRings.push({ grp: rg, spd });
+            }
+            put(edge(new THREE.OctahedronGeometry(0.03), 1, LINE_CORAL, MAT_CORAL), 0, 0.20, 0, 0, 0, 0, astroG);
+            let astroBoost = 0;
+            regInteract(astroG, 'ACTIVATE BRASS ARMILLARY ASTROLABE (TOP SHELF)', () => { astroBoost = 4.0; });
+
+            // Top-Shelf Item 2 (Center): Bronze Bust of Abraham Lincoln on Marble Plinth
+            const bustG = new THREE.Group();
+            put(bustG, 0.0, TOP_SHELF_Y, 0.06, 0, 0, 0, bookcase);
+            put(box(0.14, 0.045, 0.12, MAT_CREAM), 0, 0.0225, 0, 0, 0, 0, bustG);
+            put(box(0.11, 0.02, 0.095, MAT_GOLD), 0, 0.052, 0, 0, 0, 0, bustG);
+            const bustStatue = new THREE.Group();
+            put(bustStatue, 0, 0.062, 0, 0, 0, 0, bustG);
+            put(cyl(0.05, 0.085, 0.11, 8, MAT_BRONZE), 0, 0.055, 0, 0, Math.PI / 8, 0, bustStatue);
+            put(cyl(0.026, 0.030, 0.045, 8, MAT_BRONZE), 0, 0.12, 0, 0, 0, 0, bustStatue);
+            put(edge(new THREE.DodecahedronGeometry(0.062, 0), 8, LINE_DARK, MAT_BRONZE), 0, 0.19, 0, 0, 0, 0, bustStatue);
+            put(box(0.055, 0.045, 0.045, MAT_BRONZE), 0, 0.15, 0.032, 0, 0, 0, bustStatue);
+            let bustSpinT = 0;
+            regInteract(bustG, 'SALUTE BRONZE BUST OF ABRAHAM LINCOLN (TOP SHELF)', () => { bustSpinT = 2.2; });
+
+            // Top-Shelf Item 3 (Right): Crystal Campaign Hourglass (Flips 180 deg!)
+            const topHgPivot = new THREE.Group();
+            put(topHgPivot, 0.40, TOP_SHELF_Y + 0.17, 0.06, 0, 0, 0, bookcase);
+            const topHg = new THREE.Group();
+            put(topHg, 0, -0.17, 0, 0, 0, 0, topHgPivot);
+            put(cyl(0.075, 0.075, 0.022, 10, MAT_WOOD_DARK), 0, 0.011, 0, 0, 0, 0, topHg);
+            put(cyl(0.075, 0.075, 0.022, 10, MAT_WOOD_DARK), 0, 0.33, 0, 0, 0, 0, topHg);
+            for (const a of [0, 2.09, 4.18]) {
+                put(cyl(0.006, 0.006, 0.32, 6, MAT_GOLD), Math.cos(a) * 0.058, 0.17, Math.sin(a) * 0.058, 0, 0, 0, topHg);
+            }
+            put(edge(new THREE.ConeGeometry(0.054, 0.14, 10), 15, LINE_DARK, MAT_GLASS), 0, 0.245, 0, Math.PI, 0, 0, topHg);
+            put(edge(new THREE.ConeGeometry(0.054, 0.14, 10), 15, LINE_DARK, MAT_GLASS), 0, 0.095, 0, 0, 0, 0, topHg);
+            put(edge(new THREE.ConeGeometry(0.042, 0.095, 8), 15, LINE_CORAL, MAT_CORAL), 0, 0.07, 0, 0, 0, 0, topHg);
+            let hgFlipped = false, hgCurRot = 0;
+            regInteract(topHgPivot, 'FLIP CAMPAIGN COUNTDOWN HOURGLASS (TOP SHELF)', () => { hgFlipped = !hgFlipped; });
+
+            // Standing Brass & Ocean Floor Globe (In front of bookcase on the right)
+            const floorGlobe = new THREE.Group();
+            put(floorGlobe, 2.18, 0, 0.12);
+            put(cyl(0.20, 0.26, 0.06, 12, MAT_WOOD_DARK), 0, 0.03, 0, 0, 0, 0, floorGlobe);
+            put(cyl(0.035, 0.045, 0.62, 8, MAT_WOOD_DARK), 0, 0.34, 0, 0, 0, 0, floorGlobe);
+            const fgTilt = new THREE.Group();
+            put(fgTilt, 0, 0.84, 0, 0, 0, 0.38, floorGlobe);
+            put(edge(new THREE.TorusGeometry(0.32, 0.016, 6, 28), 15, LINE_GOLD, MAT_GOLD), 0, 0, 0, 0, 0, 0, fgTilt);
+            const fgSphere = new THREE.Group();
+            fgTilt.add(fgSphere);
+            fgSphere.add(edge(new THREE.SphereGeometry(0.28, 14, 12), 10, LINE_DARK, MAT_BLUE_OCEAN));
+            fgSphere.add(lloop(ringPts(0.285, 28, 0), LINE_CORAL));
+            let globeVel = 0.6;
+            regInteract(floorGlobe, 'SPIN INTERNATIONAL SOLIDARITY FLOOR GLOBE', () => { globeVel = 15.0; });
+
+            /* ========================================================================= */
+            /* 8. THE RESOLUTE DESK (Intricate Carved Drawers + Smooth Non-Bounce Slide) */
+            /* ========================================================================= */
+            const DESK_Z = -0.32;
+            const DTOP = 0.82;
+            const deskG = new THREE.Group();
+            put(deskG, 0, 0, DESK_Z);
+
+            put(box(2.50, 0.055, 1.26, MAT_WOOD_DARK), 0, DTOP - 0.0275, 0, 0, 0, 0, deskG);
+            put(box(2.56, 0.025, 1.32, MAT_WOOD_MID), 0, DTOP - 0.06, 0, 0, 0, 0, deskG);
+            put(box(2.22, 0.012, 1.02, MAT_DESK_PAD), 0, DTOP + 0.002, 0, 0, 0, 0, deskG);
+            deskG.add(lloop([[-1.08, DTOP + 0.01, -0.48], [1.08, DTOP + 0.01, -0.48], [1.08, DTOP + 0.01, 0.48], [-1.08, DTOP + 0.01, 0.48]], LINE_GOLD));
+
+            // Left & Right Carved Pedestals with Recessed Panel Line-Art
+            for (const sx of [-0.84, 0.84]) {
+                put(box(0.72, 0.74, 1.16, MAT_WOOD_MID), sx, 0.37, 0, 0, 0, 0, deskG);
+                put(box(0.78, 0.06, 1.22, MAT_WOOD_DARK), sx, 0.03, 0, 0, 0, 0, deskG);
+                put(box(0.56, 0.28, 0.025, MAT_WOOD_LIGHT), sx, 0.25, 0.585, 0, 0, 0, deskG);
+                deskG.add(lloop([
+                    [sx - 0.24, 0.15, 0.60], [sx + 0.24, 0.15, 0.60],
+                    [sx + 0.24, 0.35, 0.60], [sx - 0.24, 0.35, 0.60]
+                ], LINE_GOLD));
+                for (const cx of [-0.35, 0.35]) {
+                    for (const cz of [-0.57, 0.57]) {
+                        put(cyl(0.03, 0.03, 0.72, 8, MAT_WOOD_DARK), sx + cx, 0.37, cz, 0, 0, 0, deskG);
+                    }
+                }
+            }
+            put(box(0.98, 0.66, 0.06, MAT_WOOD_MID), 0, 0.39, -0.50, 0, 0, 0, deskG);
+            put(cyl(0.19, 0.19, 0.04, 20, MAT_GOLD), 0, 0.39, -0.54, Math.PI / 2, 0, 0, deskG);
+
+            // Intricate Pull-Out Drawers
+            for (const [sx, title, secretType] of [
+                [-0.84, 'SLIDE LEFT DRAWER (CLASSIFIED BILLIONAIRE TAX AUDIT)', 'audit'],
+                [0.84, 'SLIDE RIGHT DRAWER (GOLDEN KEY TO THE PUBLIC TREASURY)', 'key']
+            ]) {
+                const drw = new THREE.Group();
+                put(drw, sx, 0.58, 0.44, 0, 0, 0, deskG);
+                put(box(0.58, 0.19, 0.04, MAT_WOOD_LIGHT), 0, 0, 0.15, 0, 0, 0, drw);
+                put(box(0.50, 0.125, 0.02, MAT_WOOD_MID, LINE_GOLD), 0, 0, 0.165, 0, 0, 0, drw);
+                put(cyl(0.018, 0.018, 0.015, 10, MAT_GOLD), 0, 0.01, 0.175, Math.PI / 2, 0, 0, drw);
+                drw.add(line([[0, 0.015, 0.184], [0, -0.01, 0.184]], LINE_DARK));
+                for (const hx of [-0.16, 0.16]) {
+                    put(cyl(0.022, 0.022, 0.01, 10, MAT_GOLD), hx, 0, 0.174, Math.PI / 2, 0, 0, drw);
+                    put(edge(new THREE.TorusGeometry(0.032, 0.007, 6, 12), 15, LINE_GOLD, MAT_GOLD), hx, -0.008, 0.182, 0, 0, 0, drw);
+                }
+                put(box(0.53, 0.14, 0.34, MAT_WOOD_DARK), 0, -0.01, -0.02, 0, 0, 0, drw);
+                put(box(0.49, 0.02, 0.30, MAT_RUG), 0, 0.055, -0.02, 0, 0, 0, drw);
+                for (const sideX of [-0.267, 0.267]) {
+                    for (const dy of [-0.04, 0, 0.04]) {
+                        drw.add(line([[sideX, dy, 0.14], [sideX, dy + 0.018, 0.10], [sideX, dy, 0.06]], LINE_GOLD));
+                    }
+                }
+
+                if (secretType === 'audit') {
+                    const folder = new THREE.Group();
+                    put(folder, 0, 0.068, -0.02, 0, 0.10, 0, drw);
+                    put(box(0.36, 0.018, 0.24, MAT_CORAL), 0, 0, 0, 0, 0, 0, folder);
+                    put(box(0.32, 0.014, 0.21, MAT_CREAM), 0.01, 0.008, 0, 0, -0.08, 0, folder);
+                    folder.add(line([[-0.12, 0.016, -0.04], [0.12, 0.016, -0.04]], LINE_DARK));
+                    folder.add(line([[-0.12, 0.016, 0.02], [0.08, 0.016, 0.02]], LINE_CORAL));
+                } else {
+                    const keyGrp = new THREE.Group();
+                    put(keyGrp, 0, 0.070, -0.02, 0, -0.15, 0, drw);
+                    put(edge(new THREE.TorusGeometry(0.042, 0.009, 6, 14), 15, LINE_GOLD, MAT_GOLD), -0.06, 0, 0, Math.PI / 2, 0, 0, keyGrp);
+                    put(box(0.14, 0.012, 0.018, MAT_GOLD), 0.03, 0, 0, 0, 0, 0, keyGrp);
+                    put(box(0.022, 0.012, 0.032, MAT_GOLD), 0.065, 0, 0.02, 0, 0, 0, keyGrp);
+                    put(box(0.018, 0.012, 0.026, MAT_GOLD), 0.092, 0, 0.018, 0, 0, 0, keyGrp);
+                }
+                regSlide(drw, 'z', 0.28, title);
+            }
+
+            const chairG = new THREE.Group();
+            put(chairG, 0, 0, DESK_Z - 0.90);
+            let chairSpinV = 0;
+            {
+                put(cyl(0.04, 0.04, 0.42, 8, MAT_WOOD_DARK), 0, 0.21, 0, 0, 0, 0, chairG);
+                for (let i = 0; i < 5; i++) {
+                    const a = (i / 5) * Math.PI * 2;
+                    put(box(0.05, 0.04, 0.34, MAT_WOOD_DARK), Math.sin(a) * 0.16, 0.03, Math.cos(a) * 0.16, 0, a, 0, chairG);
+                }
+                put(box(0.66, 0.09, 0.60, MAT_LEATHER), 0, 0.44, 0, 0, 0, 0, chairG);
+                const back = new THREE.Group();
+                put(back, 0, 0.96, -0.26, -0.08, 0, 0, chairG);
+                put(box(0.62, 0.96, 0.10, MAT_LEATHER), 0, 0, 0, 0, 0, 0, back);
+                put(box(0.52, 0.84, 0.11, MAT_LEATHER, LINE_GOLD), 0, 0, 0, 0, 0, 0, back);
+                for (const s of [-1, 1]) {
+                    put(box(0.07, 0.05, 0.48, MAT_WOOD_MID), s * 0.33, 0.64, -0.02, 0, 0, 0, chairG);
+                    put(box(0.05, 0.18, 0.05, MAT_WOOD_MID), s * 0.33, 0.54, 0.18, 0, 0, 0, chairG);
+                }
+            }
+            regInteract(chairG, 'SPIN PRESIDENTIAL EXECUTIVE LEATHER CHAIR', () => { chairSpinV = 11.0; });
+
+            /* ========================================================================= */
+            /* 9. DECONFLICTED LEFT DESKTOP: PHONE (BACK), COKE BUTTON (FRONT) & TRAY    */
+            /* ========================================================================= */
+            const phoneG = new THREE.Group();
+            put(phoneG, -0.92, DTOP + 0.008, DESK_Z - 0.30, 0, 0.35, 0);
+            put(cyl(0.085, 0.12, 0.085, 4, MAT_CORAL), 0, 0.042, 0, 0, Math.PI / 4, 0, phoneG);
+            put(cyl(0.048, 0.048, 0.012, 16, MAT_CREAM), 0, 0.082, 0.032, 0.45, 0, 0, phoneG);
+            const handsetG = new THREE.Group();
+            put(handsetG, 0, 0.11, -0.015, 0, 0, 0, phoneG);
+            put(box(0.24, 0.026, 0.04, MAT_CORAL), 0, 0.018, 0, 0, 0, 0, handsetG);
+            put(cyl(0.038, 0.044, 0.035, 12, MAT_CORAL), -0.095, 0, 0, 0, 0, 0, handsetG);
+            put(cyl(0.038, 0.044, 0.035, 12, MAT_CORAL), 0.095, 0, 0, 0, 0, 0, handsetG);
+            let phoneRingT = 0;
+            regInteract(phoneG, 'ANSWER NATIONAL LABOR UNION STRIKE HOTLINE', () => { phoneRingT = 2.8; });
+
+            const cokeBtnGroup = new THREE.Group();
+            put(cokeBtnGroup, -0.88, DTOP + 0.008, DESK_Z + 0.36, 0, 0.15, 0);
+            put(box(0.20, 0.046, 0.13, MAT_WOOD_LIGHT), 0, 0.023, 0, 0, 0, 0, cokeBtnGroup);
+            put(box(0.16, 0.050, 0.095, MAT_GOLD), 0, 0.025, 0, 0, 0, 0, cokeBtnGroup);
+            const redPlunger = cyl(0.036, 0.038, 0.028, 16, MAT_CORAL);
+            put(redPlunger, 0, 0.058, 0, 0, 0, 0, cokeBtnGroup);
+            const cokeRing = lloop(ringPts(0.075, 24, 0.065), LINE_CORAL);
+            cokeRing.visible = false;
+            cokeBtnGroup.add(cokeRing);
+
+            const TRAY_REST_X = -2.85;
+            const TRAY_SERVE_X = -0.52;
+            const butlerTray = new THREE.Group();
+            put(butlerTray, TRAY_REST_X, DTOP + 0.010, DESK_Z + 0.04);
+            butlerTray.visible = false;
+            {
+                const tShape = new THREE.Shape();
+                tShape.absellipse(0, 0, 0.22, 0.16, 0, Math.PI * 2, false, 0);
+                const tGeo = new THREE.ExtrudeGeometry(tShape, { depth: 0.012, bevelEnabled: false, curveSegments: 28 });
+                tGeo.rotateX(Math.PI / 2);
+                put(edge(tGeo, 20, LINE_DARK, MAT_SILVER), 0, 0.012, 0, 0, 0, 0, butlerTray);
+
+                const canG = new THREE.Group();
+                put(canG, -0.055, 0.014, -0.01, 0, 0.4, 0, butlerTray);
+                const cokeCv = document.createElement('canvas');
+                cokeCv.width = 256; cokeCv.height = 128;
+                const cctx = cokeCv.getContext('2d');
+                cctx.fillStyle = '#E2E6E9'; cctx.fillRect(0, 0, 256, 128);
+                cctx.fillStyle = '#E55B44'; cctx.fillRect(0, 12, 256, 14);
+                cctx.fillRect(0, 102, 256, 14);
+                cctx.fillStyle = '#E55B44'; cctx.font = 'italic bold 36px Georgia, serif';
+                cctx.textAlign = 'center'; cctx.fillText('Diet Coke', 128, 66);
+                cctx.fillStyle = '#132A22'; cctx.font = 'bold 13px monospace';
+                cctx.fillText('CHILLED RESERVE', 128, 90);
+                const cokeTex = new THREE.CanvasTexture(cokeCv);
+                const canMat = new THREE.MeshBasicMaterial({ map: cokeTex, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
+                const canBodyGeo = new THREE.CylinderGeometry(0.050, 0.050, 0.17, 18);
+                const canMesh = new THREE.Mesh(canBodyGeo, [canMat, MAT_SILVER, MAT_SILVER]);
+                canMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(canBodyGeo, 20), LINE_DARK));
+                put(canMesh, 0, 0.095, 0, 0, 0, 0, canG);
+                const pullTab = box(0.024, 0.004, 0.016, MAT_CORAL);
+                put(pullTab, 0, 0.184, 0, 0, 0, 0, canG);
+                butlerTray.userData.pullTab = pullTab;
+
+                const glassG = new THREE.Group();
+                put(glassG, 0.075, 0.014, 0.015, 0, 0, 0, butlerTray);
+                put(cyl(0.045, 0.036, 0.14, 14, MAT_GLASS), 0, 0.07, 0, 0, 0, 0, glassG);
+                put(box(0.026, 0.026, 0.026, MAT_CREAM, LINE_SOFT), -0.008, 0.08, 0.008, 0.3, 0.4, 0.2, glassG);
+                put(cyl(0.005, 0.005, 0.20, 6, MAT_CORAL), 0.012, 0.10, 0, 0, 0, -0.16, glassG);
+
+                const butlerArm = new THREE.Group();
+                put(butlerArm, -0.30, 0.02, 0, 0, 0, 0, butlerTray);
+                put(box(0.15, 0.045, 0.095, MAT_CREAM), 0.03, 0, 0, 0, 0, 0, butlerArm);
+                put(box(0.06, 0.052, 0.105, MAT_GOLD), -0.07, 0.004, 0, 0, 0, 0, butlerArm);
+                put(box(0.28, 0.06, 0.115, MAT_DESK_PAD), -0.22, 0.008, 0, 0, 0, 0, butlerArm);
+                butlerTray.userData.arm = butlerArm;
+            }
+
+            const fizzBubbles = [];
+            for (let i = 0; i < 8; i++) {
+                const b = edge(new THREE.OctahedronGeometry(0.008), 1, LINE_CORAL, MAT_CORAL);
+                b.visible = false;
+                butlerTray.add(b);
+                fizzBubbles.push({ mesh: b, ph: i / 8, ox: (i % 2 === 0 ? -0.055 : 0.075) + (Math.random() - 0.5) * 0.03, oz: (Math.random() - 0.5) * 0.03 });
+            }
+
+            let cokeState = 'idle', cokeAnimT = 0;
+            function triggerDietCoke() {
+                if (cokeState === 'idle') {
+                    cokeState = 'serving';
+                    cokeAnimT = 0;
+                    butlerTray.visible = true;
+                } else if (cokeState === 'served') {
+                    cokeState = 'clearing';
+                    cokeAnimT = 0;
+                }
+            }
+            regInteract(cokeBtnGroup, 'PRESS DIET COKE BUTLER BUTTON (SUMMON VALET)', triggerDietCoke);
+            regInteract(butlerTray, 'DRINK / DISMISS CHILLED DIET COKE TRAY', triggerDietCoke);
+
+            /* ========================================================================= */
+            /* 10. DESKTOP CENTER & RIGHT + ADDITIONAL INTERACTIVE ITEMS                 */
+            /* ========================================================================= */
+            const folioG = new THREE.Group();
+            put(folioG, 0.02, DTOP + 0.008, DESK_Z + 0.08, 0, 0.03, 0);
+            const docCv = document.createElement('canvas');
+            docCv.width = 256; docCv.height = 340;
+            const dctx = docCv.getContext('2d');
+            function drawDoc(signed) {
+                dctx.fillStyle = '#FAF8F2'; dctx.fillRect(0, 0, 256, 340);
+                dctx.strokeStyle = '#132A22'; dctx.lineWidth = 4; dctx.strokeRect(10, 10, 236, 320);
+                dctx.fillStyle = '#132A22'; dctx.font = 'bold 16px Georgia, serif'; dctx.textAlign = 'center';
+                dctx.fillText('EXECUTIVE ORDER #001', 128, 42);
+                dctx.fillStyle = '#E55B44'; dctx.font = 'bold 11px monospace';
+                dctx.fillText('THE ECONOMIC BILL OF RIGHTS', 128, 62);
+                dctx.strokeStyle = '#132A22'; dctx.lineWidth = 1.5;
+                for (let y = 88; y <= 210; y += 18) {
+                    dctx.beginPath(); dctx.moveTo(28, y); dctx.lineTo(228, y); dctx.stroke();
+                }
+                if (signed) {
+                    dctx.strokeStyle = '#1A4D3E'; dctx.lineWidth = 3;
+                    dctx.beginPath();
+                    dctx.moveTo(40, 265); dctx.bezierCurveTo(65, 235, 95, 280, 130, 250);
+                    dctx.bezierCurveTo(155, 235, 175, 270, 205, 255);
+                    dctx.stroke();
+                    dctx.strokeStyle = '#E55B44'; dctx.lineWidth = 3;
+                    dctx.beginPath(); dctx.arc(192, 265, 24, 0, Math.PI * 2); dctx.stroke();
+                    dctx.fillStyle = '#E55B44'; dctx.font = 'bold 9px sans-serif';
+                    dctx.fillText('APPROVED', 192, 268);
+                }
+                docTex.needsUpdate = true;
+            }
+            const docTex = new THREE.CanvasTexture(docCv);
+            drawDoc(false);
+            const docMat = new THREE.MeshBasicMaterial({ map: docTex, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
+            const pageGeo = new THREE.BoxGeometry(0.34, 0.012, 0.44);
+            const rightPage = new THREE.Mesh(pageGeo, [MAT_CREAM, MAT_CREAM, docMat, MAT_CREAM, MAT_CREAM, MAT_CREAM]);
+            rightPage.add(new THREE.LineSegments(new THREE.EdgesGeometry(pageGeo), LINE_DARK));
+            put(rightPage, 0, 0.006, 0, 0, 0, 0, folioG);
+
+            const coverPivot = new THREE.Group();
+            put(coverPivot, -0.17, 0.014, 0, 0, 0, 0, folioG);
+            const coverSlab = box(0.35, 0.010, 0.45, MAT_LEATHER, LINE_CORAL);
+            put(coverSlab, 0.175, 0, 0, 0, 0, 0, coverPivot);
+            put(cyl(0.055, 0.055, 0.014, 16, MAT_GOLD), 0.175, 0.002, 0, 0, 0, 0, coverPivot);
+
+            const folioHolo = new THREE.Group();
+            put(folioHolo, 0, 0.24, 0, 0, 0, 0, folioG);
+            folioHolo.add(edge(new THREE.OctahedronGeometry(0.062), 1, LINE_CORAL, MAT_CORAL));
+            folioHolo.add(edge(new THREE.TorusGeometry(0.115, 0.006, 6, 24), 15, LINE_GOLD, MAT_GOLD));
+            let folioOpen = true, folioP = 1;
+            regInteract(folioG, 'OPEN / CLOSE EXECUTIVE ORDER #001 FOLIO', () => { folioOpen = !folioOpen; });
+
+            const penStand = new THREE.Group();
+            const PEN_HOME = V(0.28, DTOP + 0.008, DESK_Z + 0.16);
+            put(penStand, PEN_HOME.x, PEN_HOME.y, PEN_HOME.z);
+            put(box(0.10, 0.022, 0.075, MAT_GOLD), 0, 0.011, 0, 0, 0, 0, penStand);
+            put(cyl(0.015, 0.018, 0.042, 8, MAT_GOLD), 0, 0.032, 0, 0, 0, -0.35, penStand);
+
+            const penG = new THREE.Group();
+            put(penG, PEN_HOME.x, PEN_HOME.y + 0.035, PEN_HOME.z, 0, 0, -0.35);
+            put(cyl(0.009, 0.012, 0.21, 8, MAT_DESK_PAD), 0, 0.125, 0, 0, 0, 0, penG);
+            put(edge(new THREE.ConeGeometry(0.009, 0.032, 6), 1, LINE_GOLD, MAT_GOLD), 0, 0.005, 0, 0, 0, Math.PI, penG);
+
+            let penSignT = 0;
+            function triggerPenSign() {
+                folioOpen = true;
+                penSignT = 2.2;
+                setTimeout(() => drawDoc(true), 950);
+            }
+            regInteract(penG, 'SIGN EXECUTIVE ORDER WITH PRESIDENTIAL FOUNTAIN PEN', triggerPenSign);
+            regInteract(penStand, 'SIGN EXECUTIVE ORDER WITH PRESIDENTIAL FOUNTAIN PEN', triggerPenSign);
+
+            const stampG = new THREE.Group();
+            const STAMP_HOME = V(0.42, DTOP + 0.008, DESK_Z + 0.02);
+            const STAMP_HIT = V(0.08, DTOP + 0.022, DESK_Z + 0.16);
+            put(stampG, STAMP_HOME.x, STAMP_HOME.y, STAMP_HOME.z);
+            put(cyl(0.06, 0.068, 0.03, 14, MAT_GOLD), 0, 0.015, 0, 0, 0, 0, stampG);
+            put(cyl(0.022, 0.035, 0.075, 10, MAT_WOOD_DARK), 0, 0.068, 0, 0, 0, 0, stampG);
+            put(edge(new THREE.SphereGeometry(0.036, 10, 8), 15, LINE_CORAL, MAT_CORAL), 0, 0.12, 0, 0, 0, 0, stampG);
+
+            const stampWave = lloop(ringPts(0.11, 28, DTOP + 0.025), LINE_CORAL);
+            stampWave.position.set(STAMP_HIT.x, 0, STAMP_HIT.z);
+            stampWave.visible = false;
+            scene.add(stampWave);
+
+            let stampAnimT = 0;
+            regInteract(stampG, 'RATIFY BILL WITH THE OFFICIAL PRESIDENTIAL SEAL', () => {
+                folioOpen = true;
+                stampAnimT = 1.5;
+                setTimeout(() => drawDoc(true), 650);
+            });
+
+            const maglevBase = new THREE.Group();
+            put(maglevBase, 0.74, DTOP + 0.008, DESK_Z + 0.24, 0, -0.22, 0);
+            put(box(0.48, 0.032, 0.32, MAT_SILVER), 0, 0.016, 0, 0, 0, 0, maglevBase);
+            put(box(0.42, 0.012, 0.26, MAT_RUG), 0, 0.038, 0, 0, 0, 0, maglevBase);
+            const holoTrack = new THREE.Group();
+            maglevBase.add(holoTrack);
+            const trackCurvePts = [];
+            for (let i = 0; i <= 24; i++) {
+                const t = i / 24;
+                const x = -0.18 + t * 0.36;
+                const z = 0.05 - Math.sin(t * Math.PI) * 0.11;
+                const y = 0.052 + Math.sin(t * Math.PI) * 0.13;
+                trackCurvePts.push([x, y, z]);
+                if (i % 4 === 0) holoTrack.add(iline([[x, 0.045, z], [x, y, z]]));
+            }
+            holoTrack.add(line(trackCurvePts, LINE_CORAL));
+            const miniTrain = box(0.088, 0.022, 0.024, MAT_CORAL, LINE_CORAL);
+            holoTrack.add(miniTrain);
+            let maglevFastT = 0;
+            regInteract(maglevBase, 'ACTIVATE TRANSCONTINENTAL HIGH-SPEED RAIL HOLOGRAM', () => { maglevFastT = 4.0; });
+
+            const abacusG = new THREE.Group();
+            put(abacusG, -0.34, DTOP + 0.008, DESK_Z - 0.32, 0, 0.15, 0);
+            put(box(0.26, 0.17, 0.038, MAT_WOOD_LIGHT), 0, 0.085, 0, 0, 0, 0, abacusG);
+            const abacusBeads = [];
+            let abacusWon = false;
+            for (let r = 0; r < 3; r++) {
+                const ry = 0.048 + r * 0.042;
+                abacusG.add(line([[-0.11, ry, 0.022], [0.11, ry, 0.022]], LINE_DARK));
+                for (let b = 0; b < 4; b++) {
+                    const bead = cyl(0.015, 0.015, 0.020, 10, b % 2 === 0 ? MAT_CORAL : MAT_GOLD);
+                    const homeX = -0.088 + b * 0.026;
+                    const winX = 0.088 - (3 - b) * 0.026;
+                    put(bead, homeX, ry, 0.022, 0, 0, Math.PI / 2, abacusG);
+                    abacusBeads.push({ mesh: bead, homeX, winX, curX: homeX });
+                }
+            }
+            regInteract(abacusG, 'TALLY 270 ELECTORAL COLLEGE MAJORITY COUNTER', () => { abacusWon = !abacusWon; });
+
+            const flipClockG = new THREE.Group();
+            put(flipClockG, 0.42, DTOP + 0.008, DESK_Z - 0.30, 0, -0.18, 0);
+            put(box(0.23, 0.12, 0.09, MAT_GOLD), 0, 0.065, 0, 0, 0, 0, flipClockG);
+            const flipCv = document.createElement('canvas');
+            flipCv.width = 256; flipCv.height = 128;
+            const fctx = flipCv.getContext('2d');
+            const flipTex = new THREE.CanvasTexture(flipCv);
+            const FLIP_TIMES = ['20:28', '02:70', '19:17', '10:00'];
+            let flipIdx = 0, flipFlapRot = 0;
+            function drawFlipTime(str) {
+                fctx.fillStyle = '#132A22'; fctx.fillRect(0, 0, 256, 128);
+                fctx.fillStyle = '#FAF8F2'; fctx.font = 'bold 76px monospace';
+                fctx.textAlign = 'center'; fctx.textBaseline = 'middle';
+                fctx.fillText(str, 128, 66);
+                fctx.fillStyle = '#E55B44'; fctx.fillRect(0, 62, 256, 4);
+                flipTex.needsUpdate = true;
+            }
+            drawFlipTime(FLIP_TIMES[0]);
+            const flipFace = new THREE.Mesh(new THREE.PlaneGeometry(0.20, 0.095), new THREE.MeshBasicMaterial({ map: flipTex }));
+            put(flipFace, 0, 0.065, 0.048, 0, 0, 0, flipClockG);
+            regInteract(flipClockG, 'FLIP MECHANICAL CAMPAIGN COUNTDOWN CLOCK', () => {
+                flipIdx = (flipIdx + 1) % FLIP_TIMES.length;
+                flipFlapRot = Math.PI;
+                drawFlipTime(FLIP_TIMES[flipIdx]);
+            });
+
+            const cradleG = new THREE.Group();
+            put(cradleG, 0.02, DTOP + 0.008, DESK_Z - 0.34);
+            put(box(0.22, 0.022, 0.13, MAT_WOOD_DARK), 0, 0.011, 0, 0, 0, 0, cradleG);
+            for (const sz of [-0.045, 0.045]) {
+                cradleG.add(line([[-0.09, 0.022, sz], [-0.09, 0.17, sz], [0.09, 0.17, sz], [0.09, 0.022, sz]], LINE_DARK));
+            }
+            const cradleBalls = [];
+            for (let i = -2; i <= 2; i++) {
+                const pivot = new THREE.Group();
+                put(pivot, i * 0.030, 0.17, 0, 0, 0, 0, cradleG);
+                pivot.add(iline([[0, 0, -0.045], [0, -0.095, 0], [0, 0, 0.045]]));
+                put(edge(new THREE.SphereGeometry(0.015, 8, 6), 15, LINE_GOLD, MAT_GOLD), 0, -0.095, 0, 0, 0, 0, cradleG);
+                pivot.add(cradleG.children[cradleG.children.length - 1]);
+                cradleBalls.push(pivot);
+            }
+            let cradleEnergy = 0.65;
+            regInteract(cradleG, 'SWING NEWTON\'S CRADLE EXECUTIVE PENDULUM', () => { cradleEnergy = 1.25; });
+
+            const micGroup = new THREE.Group();
+            put(micGroup, -0.25, DTOP + 0.008, DESK_Z + 0.36, 0, -0.08, 0);
+            put(box(0.16, 0.022, 0.10, MAT_GOLD), 0, 0.011, 0, 0, 0, 0, micGroup);
+            const micHeads = new THREE.Group();
+            put(micHeads, 0, 0.022, 0, 0, 0, 0, micGroup);
+            for (const mx of [-0.04, 0.04]) {
+                put(cyl(0.006, 0.006, 0.15, 6, MAT_SILVER), mx, 0.075, 0, -0.35, 0, 0, micHeads);
+                put(edge(new THREE.SphereGeometry(0.022, 8, 8), 10, LINE_DARK, MAT_CORAL), mx, 0.15, 0.045, 0, 0, 0, micHeads);
+            }
+            let micFlashT = 0;
+            regInteract(micGroup, 'ADDRESS THE WHITE HOUSE PRESS CORPS (CAMERA FLASHES)', () => {
+                micFlashT = 0.8;
+                const fl = document.getElementById('flashOverlay');
+                fl.style.opacity = '0.75';
+                setTimeout(() => { fl.style.opacity = '0'; }, 120);
+                setTimeout(() => { fl.style.opacity = '0.55'; }, 260);
+                setTimeout(() => { fl.style.opacity = '0'; }, 400);
+            });
+
+            let lampOn = true;
+            const lampG = new THREE.Group();
+            put(lampG, 0.92, DTOP + 0.008, DESK_Z - 0.18, 0, -0.38, 0);
+            put(cyl(0.10, 0.13, 0.038, 14, MAT_GOLD), 0, 0.019, 0, 0, 0, 0, lampG);
+            put(cyl(0.016, 0.016, 0.34, 8, MAT_GOLD), 0, 0.19, -0.03, 0, 0, 0, lampG);
+            put(cyl(0.065, 0.16, 0.11, 8, MAT_GREEN_SHADE), 0, 0.36, 0.02, 0, 0, 0, lampG);
+            put(cyl(0.005, 0.005, 0.13, 6, MAT_GOLD), 0.055, 0.28, 0.02, 0, 0, 0, lampG);
+            put(edge(new THREE.SphereGeometry(0.013, 6, 6), 15, LINE_CORAL, MAT_CORAL), 0.055, 0.20, 0.02, 0, 0, 0, lampG);
+
+            const lampCone = new THREE.Mesh(
+                new THREE.ConeGeometry(0.42, 0.38, 20, 1, true),
+                new THREE.MeshBasicMaterial({ color: 0xFFE49E, transparent: true, opacity: 0.22, side: THREE.DoubleSide, depthWrite: false, blending: THREE.AdditiveBlending })
+            );
+            lampCone.userData.noHit = true;
+            put(lampCone, 0, 0.17, 0.02, 0, 0, 0, lampG);
+            regInteract(lampG, 'PULL CHAIN ON EMERALD BANKER\'S LAMP', () => {
+                lampOn = !lampOn;
+                lampCone.visible = lampOn;
+            });
+
+            /* --- EXTRA INTERACTIVE #4: Brass Scales of Justice (Desktop Mid-Left) --- */
+            const scalesG = new THREE.Group();
+            put(scalesG, -0.66, DTOP + 0.008, DESK_Z - 0.32, 0, 0.25, 0);
+            put(cyl(0.055, 0.075, 0.028, 12, MAT_GOLD), 0, 0.014, 0, 0, 0, 0, scalesG);
+            put(cyl(0.010, 0.014, 0.24, 8, MAT_GOLD), 0, 0.13, 0, 0, 0, 0, scalesG);
+            const scaleBeam = new THREE.Group();
+            put(scaleBeam, 0, 0.24, 0, 0, 0, 0, scalesG);
+            put(box(0.24, 0.012, 0.012, MAT_GOLD), 0, 0, 0, 0, 0, 0, scaleBeam);
+            for (const sx of [-0.11, 0.11]) {
+                scaleBeam.add(iline([[sx, 0, 0], [sx - 0.03, -0.09, 0]]));
+                scaleBeam.add(iline([[sx, 0, 0], [sx + 0.03, -0.09, 0]]));
+                put(cyl(0.042, 0.028, 0.014, 12, MAT_GOLD), sx, -0.095, 0, 0, 0, 0, scaleBeam);
+            }
+            let scaleTiltT = 0;
+            regInteract(scalesG, 'TIP THE BRASS SCALES OF ECONOMIC JUSTICE', () => { scaleTiltT = 3.2; });
+
+            /* --- EXTRA INTERACTIVE #5: Steaming Porcelain Coffee Cup & Saucer (Desktop Front-Right) --- */
+            const coffeeG = new THREE.Group();
+            put(coffeeG, 0.38, DTOP + 0.008, DESK_Z + 0.36);
+            put(cyl(0.068, 0.050, 0.014, 14, MAT_CREAM), 0, 0.007, 0, 0, 0, 0, coffeeG);
+            put(cyl(0.044, 0.035, 0.08, 12, MAT_CREAM), 0, 0.048, 0, 0, 0, 0, coffeeG);
+            put(cyl(0.038, 0.038, 0.006, 12, MAT_WOOD_DARK), 0, 0.086, 0, 0, 0, 0, coffeeG);
+            put(edge(new THREE.TorusGeometry(0.024, 0.006, 6, 12), 15, LINE_GOLD, MAT_GOLD), 0.046, 0.05, 0, 0, 0, 0, coffeeG);
+            const coffeeSteam = new THREE.Group();
+            put(coffeeSteam, 0, 0.10, 0, 0, 0, 0, coffeeG);
+            for (const ox of [-0.014, 0, 0.014]) {
+                coffeeSteam.add(line([[ox, 0, 0], [ox + 0.01, 0.04, 0], [ox - 0.01, 0.08, 0], [ox + 0.008, 0.12, 0]], LINE_CORAL));
+            }
+            let coffeeSteamT = 2.5;
+            regInteract(coffeeG, 'BREW FRESH ESPRESSO FOR LATE-NIGHT LEGISLATION', () => { coffeeSteamT = 4.0; });
+
+            /* --- EXTRA INTERACTIVE #6: Vintage Union Radio on Side Pedestal (Right of Desk) --- */
+            const radioPedestal = new THREE.Group();
+            put(radioPedestal, 1.65, 0, -0.72, 0, -0.35, 0);
+            put(box(0.46, 0.62, 0.38, MAT_WOOD_MID), 0, 0.31, 0, 0, 0, 0, radioPedestal);
+            put(box(0.50, 0.04, 0.42, MAT_WOOD_DARK), 0, 0.63, 0, 0, 0, 0, radioPedestal);
+            const radioG = new THREE.Group();
+            put(radioG, 0, 0.65, 0, 0, 0, 0, radioPedestal);
+            put(box(0.34, 0.21, 0.18, MAT_WOOD_LIGHT), 0, 0.105, 0, 0, 0, 0, radioG);
+            put(box(0.18, 0.11, 0.02, MAT_CREAM), -0.04, 0.12, 0.09, 0, 0, 0, radioG);
+            for (let gy = 0.08; gy <= 0.16; gy += 0.025) {
+                radioG.add(line([[-0.11, gy, 0.102], [0.03, gy, 0.102]], LINE_DARK));
+            }
+            put(cyl(0.022, 0.022, 0.02, 10, MAT_CORAL), 0.10, 0.14, 0.095, Math.PI / 2, 0, 0, radioG);
+            put(cyl(0.022, 0.022, 0.02, 10, MAT_GOLD), 0.10, 0.08, 0.095, Math.PI / 2, 0, 0, radioG);
+            const radioNotes = [];
+            for (let i = 0; i < 3; i++) {
+                const nt = edge(new THREE.OctahedronGeometry(0.022), 1, LINE_CORAL, MAT_CORAL);
+                nt.visible = false;
+                radioG.add(nt);
+                radioNotes.push({ mesh: nt, ph: i / 3 });
+            }
+            let radioPlayT = 0;
+            regInteract(radioG, 'TUNE VINTAGE UNION BROADCAST RADIO', () => { radioPlayT = 3.8; });
+
+            /* --- EXTRA INTERACTIVE #7: Classified Waste Bin (Nudged Right to x = 1.66, z = 0.36 — Zero Desk Clipping!) --- */
+            const binG = new THREE.Group();
+            put(binG, 1.66, 0, 0.36);
+            put(cyl(0.20, 0.15, 0.42, 14, MAT_GOLD), 0, 0.21, 0, 0, 0, 0, binG);
+            put(edge(new THREE.TorusGeometry(0.205, 0.012, 6, 20), 15, LINE_DARK, MAT_WOOD_DARK), 0, 0.42, 0, Math.PI / 2, 0, 0, binG);
+            const paperBalls = [];
+            for (let i = 0; i < 5; i++) {
+                const a = (i / 5) * Math.PI * 2;
+                const pb = edge(new THREE.DodecahedronGeometry(0.052, 0), 8, LINE_DARK, i % 2 === 0 ? MAT_CREAM : MAT_CORAL);
+                const by = 0.36 + (i % 2) * 0.04;
+                put(pb, Math.cos(a) * 0.075, by, Math.sin(a) * 0.075, i, i * 0.7, 0, binG);
+                paperBalls.push({ mesh: pb, baseY: by, ph: i });
+            }
+            let binTossT = 0;
+            regInteract(binG, 'SHRED & TOSS CORPORATE LOBBYIST BILLS IN WASTE BIN', () => { binTossT = 1.6; });
+
+            /* --- EXTRA INTERACTIVE #8: Presidential Leather Briefcase (Nudged Left to x = -1.78, z = 0.35 — Zero Desk Clipping!) --- */
+            const caseG = new THREE.Group();
+            put(caseG, -1.78, 0, 0.35, 0, 0.42, 0);
+            put(box(0.46, 0.09, 0.34, MAT_LEATHER), 0, 0.045, 0, 0, 0, 0, caseG);
+            put(cyl(0.032, 0.032, 0.32, 10, MAT_CREAM), 0, 0.08, 0, 0, 0, Math.PI / 2, caseG);
+            put(cyl(0.035, 0.035, 0.05, 10, MAT_CORAL), 0, 0.08, 0, 0, 0, Math.PI / 2, caseG);
+            const caseLidPivot = new THREE.Group();
+            put(caseLidPivot, 0, 0.09, -0.17, 0, 0, 0, caseG);
+            put(box(0.46, 0.04, 0.34, MAT_LEATHER), 0, 0.02, 0.17, 0, 0, 0, caseLidPivot);
+            put(box(0.05, 0.035, 0.02, MAT_GOLD), -0.14, 0.01, 0.345, 0, 0, 0, caseLidPivot);
+            put(box(0.05, 0.035, 0.02, MAT_GOLD), 0.14, 0.01, 0.345, 0, 0, 0, caseLidPivot);
+            regHinge(caseLidPivot, 'x', 0, -1.25, 'OPEN / CLOSE PRESIDENTIAL LEATHER BRIEFCASE');
+
+            /* ========================================================================= */
+            /* 11. Raycasting, Subtle Mouse Parallax & Main Animation Loop               */
+            /* ========================================================================= */
+            const raycaster = new THREE.Raycaster();
+            const mouse = new THREE.Vector2();
+            const hintEl = document.getElementById('hint');
+
+            function pickObject(clientX, clientY) {
+                mouse.x = (clientX / window.innerWidth) * 2 - 1;
+                mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+                raycaster.setFromCamera(mouse, camera);
+                const hits = raycaster.intersectObjects(interactMeshes, false);
+                return hits.length > 0 ? hits[0].object.userData.interactRoot : null;
+            }
+
+            window.addEventListener('pointermove', e => {
+                camRig.mouseX = ((e.clientX / window.innerWidth) - 0.5) * 0.45;
+                camRig.mouseY = ((e.clientY / window.innerHeight) - 0.5) * 0.24;
+
+                if (window.modalActive || e.clientY > window.innerHeight - 78) {
+                    hintEl.classList.remove('show');
+                    return;
+                }
+                const hit = pickObject(e.clientX, e.clientY);
+                if (hit && hit.userData.aimLabel) {
+                    renderer.domElement.style.cursor = 'pointer';
+                    hintEl.innerHTML = `CLICK TO INTERACT · <b>${hit.userData.aimLabel}</b>`;
+                    hintEl.classList.add('show');
+                } else {
+                    renderer.domElement.style.cursor = 'default';
+                    hintEl.classList.remove('show');
+                }
+            });
+
+            renderer.domElement.addEventListener('pointerdown', e => {
+                if (e.button !== 0 || window.modalActive) return;
+                const hit = pickObject(e.clientX, e.clientY);
+                if (hit && hit.userData.onTrigger) {
+                    hit.userData.onTrigger();
+                }
+            });
+
+            window.addEventListener('resize', () => {
+                camera.aspect = window.innerWidth / window.innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(window.innerWidth, window.innerHeight);
+            });
+
+            let lastT = performance.now() * 0.001;
+            function animate() {
+                requestAnimationFrame(animate);
+                const now = performance.now() * 0.001;
+                const dt = Math.min(0.05, Math.max(0.001, now - lastT));
+                lastT = now;
+
+                FILL.uniforms.uTime.value = now;
+                FILL.uniforms.uFireStrength.value += ((fireLit ? 0.78 : 0.0) - FILL.uniforms.uFireStrength.value) * 0.1;
+                FILL.uniforms.uLampStrength.value += ((lampOn ? 0.70 : 0.0) - FILL.uniforms.uLampStrength.value) * 0.12;
+
+                camRig.curX += (camRig.mouseX - camRig.curX) * 0.06;
+                camRig.curY += (camRig.mouseY - camRig.curY) * 0.06;
+                camera.position.set(
+                    camRig.basePos.x + camRig.curX,
+                    camRig.basePos.y - camRig.curY,
+                    camRig.basePos.z
+                );
+                camera.lookAt(camRig.lookTarget);
+
+                // Smooth Overdamped Interpolation for Hinges & Slides (Zero Bounce!)
+                const damp = 1 - Math.exp(-5.5 * dt);
+                for (const h of hinges) {
+                    const s = h.userData.spring;
+                    s.cur += ((s.open ? 1 : 0) - s.cur) * damp;
+                    h.rotation[s.axis] = s.base + s.delta * s.cur;
+                }
+                for (const g of slides) {
+                    const s = g.userData.slide;
+                    s.cur += ((s.open ? 1 : 0) - s.cur) * damp;
+                    g.position[s.axis] = s.base + s.dist * s.cur;
+                }
+
+                // Top-Shelf Astrolabe, Lincoln Bust & Hourglass Animations
+                if (astroBoost > 0) astroBoost = Math.max(0, astroBoost - dt);
+                const astroMult = astroBoost > 0 ? 5.5 : 0.4;
+                for (const r of astroRings) {
+                    r.grp.rotation.y += r.spd * astroMult * dt;
+                    r.grp.rotation.x += r.spd * 0.4 * astroMult * dt;
+                }
+                if (bustSpinT > 0) {
+                    bustSpinT = Math.max(0, bustSpinT - dt);
+                    bustStatue.rotation.y = Math.sin((1 - bustSpinT / 2.2) * Math.PI * 2) * 0.65;
+                } else {
+                    bustStatue.rotation.y = 0;
+                }
+                const targetHgRot = hgFlipped ? Math.PI : 0;
+                hgCurRot += (targetHgRot - hgCurRot) * damp;
+                topHgPivot.rotation.z = hgCurRot;
+
+                // Extra Props: Scales of Justice, Coffee Steam, Union Radio & Waste Bin
+                if (scaleTiltT > 0) {
+                    scaleTiltT = Math.max(0, scaleTiltT - dt);
+                    scaleBeam.rotation.z = Math.sin(now * 7.5) * 0.24 * (scaleTiltT / 3.2);
+                } else {
+                    scaleBeam.rotation.z = 0;
+                }
+                if (coffeeSteamT > 0) {
+                    coffeeSteamT = Math.max(0, coffeeSteamT - dt);
+                    coffeeSteam.visible = true;
+                    coffeeSteam.position.y = 0.10 + ((now * 0.12) % 0.06);
+                } else {
+                    coffeeSteam.visible = false;
+                }
+                if (radioPlayT > 0) {
+                    radioPlayT = Math.max(0, radioPlayT - dt);
+                    radioG.scale.y = 1 + Math.sin(now * 24) * 0.03;
+                    radioNotes.forEach((n, idx) => {
+                        n.mesh.visible = true;
+                        const p = (now * 0.8 + n.ph) % 1;
+                        n.mesh.position.set(Math.sin(now * 5 + idx) * 0.08, 0.22 + p * 0.28, 0.04);
+                    });
+                } else {
+                    radioG.scale.y = 1;
+                    radioNotes.forEach(n => n.mesh.visible = false);
+                }
+                if (binTossT > 0) {
+                    binTossT = Math.max(0, binTossT - dt);
+                    for (const pb of paperBalls) {
+                        pb.mesh.position.y = pb.baseY + Math.abs(Math.sin(now * 12 + pb.ph)) * 0.18 * (binTossT / 1.6);
+                        pb.mesh.rotation.x += 5 * dt;
+                    }
+                }
+
+                if (Math.abs(chairSpinV) > 0.01) {
+                    chairG.rotation.y += chairSpinV * dt;
+                    chairSpinV *= Math.pow(0.18, dt);
+                }
+                if (fireLit) {
+                    for (const f of flames) {
+                        const s = 0.85 + 0.24 * Math.sin(now * 8.5 + f.ph);
+                        f.mesh.scale.set(1, s, 1);
+                        f.mesh.rotation.z = Math.sin(now * 6.2 + f.ph) * 0.09;
+                    }
+                }
+
+                if (cokeState === 'serving') {
+                    cokeAnimT += dt;
+                    redPlunger.position.y = cokeAnimT < 0.25 ? 0.044 : 0.058;
+                    cokeRing.visible = cokeAnimT < 0.6;
+                    cokeRing.scale.setScalar(1 + cokeAnimT * 2.5);
+
+                    const k = Math.min(1, cokeAnimT / 1.05);
+                    const ease = 1 - Math.pow(1 - k, 3);
+                    butlerTray.position.x = TRAY_REST_X + (TRAY_SERVE_X - TRAY_REST_X) * ease;
+                    if (cokeAnimT > 0.80) {
+                        const ak = Math.min(1, (cokeAnimT - 0.80) / 0.45);
+                        butlerTray.userData.arm.position.x = -0.30 - ak * 1.8;
+                        butlerTray.userData.pullTab.rotation.z = ak * 0.65;
+                    } else {
+                        butlerTray.userData.arm.position.x = -0.30;
+                        butlerTray.userData.pullTab.rotation.z = 0;
+                    }
+                    if (cokeAnimT >= 1.30) cokeState = 'served';
+                } else if (cokeState === 'clearing') {
+                    cokeAnimT += dt;
+                    const k = Math.min(1, cokeAnimT / 0.75);
+                    butlerTray.position.x = TRAY_SERVE_X + (TRAY_REST_X - TRAY_SERVE_X) * (k * k);
+                    if (k >= 1) {
+                        butlerTray.visible = false;
+                        cokeState = 'idle';
+                    }
+                }
+                const showFizz = (cokeState === 'served' || (cokeState === 'serving' && cokeAnimT > 0.85));
+                for (const b of fizzBubbles) {
+                    b.mesh.visible = showFizz;
+                    if (showFizz) {
+                        const p = (now * 0.95 + b.ph) % 1;
+                        b.mesh.position.set(b.ox + Math.sin(now * 6 + b.ph * 9) * 0.008, 0.16 + p * 0.16, b.oz);
+                        b.mesh.scale.setScalar(1 - p * 0.6);
+                    }
+                }
+
+                folioP += ((folioOpen ? 1 : 0) - folioP) * 0.12;
+                coverPivot.rotation.z = folioP * 2.92;
+                folioHolo.visible = folioP > 0.35;
+                if (folioHolo.visible) {
+                    folioHolo.rotation.y = now * 1.6;
+                    folioHolo.position.y = 0.22 + Math.sin(now * 3.2) * 0.02;
+                }
+
+                if (penSignT > 0) {
+                    penSignT = Math.max(0, penSignT - dt);
+                    const p = 1 - penSignT / 2.2;
+                    if (p < 0.25) {
+                        const k = p / 0.25;
+                        penG.position.lerpVectors(V(PEN_HOME.x, PEN_HOME.y + 0.035, PEN_HOME.z), V(0.0, DTOP + 0.035, DESK_Z + 0.18), k);
+                        penG.rotation.z = -0.35 + k * 0.2;
+                    } else if (p < 0.75) {
+                        const st = (p - 0.25) / 0.50;
+                        penG.position.set(-0.06 + st * 0.14 + Math.sin(now * 38) * 0.012, DTOP + 0.026 + Math.abs(Math.sin(now * 28)) * 0.008, DESK_Z + 0.18 + Math.cos(now * 32) * 0.01);
+                    } else {
+                        const k = (p - 0.75) / 0.25;
+                        penG.position.lerpVectors(V(0.08, DTOP + 0.035, DESK_Z + 0.18), V(PEN_HOME.x, PEN_HOME.y + 0.035, PEN_HOME.z), k);
+                        penG.rotation.z = -0.15 - k * 0.2;
+                    }
+                }
+
+                if (stampAnimT > 0) {
+                    stampAnimT = Math.max(0, stampAnimT - dt);
+                    const p = 1 - stampAnimT / 1.5;
+                    if (p < 0.42) {
+                        const k = p / 0.42;
+                        stampG.position.lerpVectors(STAMP_HOME, STAMP_HIT, k);
+                        stampG.position.y += Math.sin(k * Math.PI) * 0.28;
+                    } else if (p < 0.65) {
+                        stampG.position.copy(STAMP_HIT);
+                        stampWave.visible = true;
+                        stampWave.scale.setScalar(0.6 + ((p - 0.42) / 0.23) * 1.9);
+                    } else {
+                        stampWave.visible = false;
+                        const k = (p - 0.65) / 0.35;
+                        stampG.position.lerpVectors(STAMP_HIT, STAMP_HOME, k);
+                        stampG.position.y += Math.sin(k * Math.PI) * 0.18;
+                    }
+                }
+
+                if (maglevFastT > 0) maglevFastT = Math.max(0, maglevFastT - dt);
+                const trainSpd = maglevFastT > 0 ? 1.35 : 0.32;
+                const tt = (now * trainSpd) % 1;
+                miniTrain.position.set(-0.18 + tt * 0.36, 0.055 + Math.sin(tt * Math.PI) * 0.13, 0.05 - Math.sin(tt * Math.PI) * 0.11);
+                miniTrain.rotation.z = Math.cos(tt * Math.PI) * 0.45;
+
+                if (phoneRingT > 0) {
+                    phoneRingT = Math.max(0, phoneRingT - dt);
+                    handsetG.position.y = 0.128 + Math.abs(Math.sin(now * 38)) * 0.030;
+                    handsetG.rotation.z = Math.sin(now * 44) * 0.16;
+                } else {
+                    handsetG.position.y = 0.11;
+                    handsetG.rotation.z = 0;
+                }
+
+                for (const b of abacusBeads) {
+                    const targetX = abacusWon ? b.winX : b.homeX;
+                    b.curX += (targetX - b.curX) * damp;
+                    b.mesh.position.x = b.curX;
+                }
+                if (flipFlapRot > 0.01) {
+                    flipFlapRot *= Math.pow(0.04, dt);
+                    flipClockG.scale.y = 1 + Math.sin(flipFlapRot) * 0.15;
+                } else {
+                    flipClockG.scale.y = 1;
+                }
+
+                cradleEnergy = Math.max(0.18, cradleEnergy * Math.pow(0.65, dt));
+                const swing = Math.sin(now * 6.5) * cradleEnergy;
+                cradleBalls[0].rotation.z = Math.min(0, swing);
+                cradleBalls[4].rotation.z = Math.max(0, swing);
+
+                fgSphere.rotation.y += globeVel * dt;
+                globeVel = Math.max(0.5, globeVel * Math.pow(0.25, dt));
+
+                if (micFlashT > 0) {
+                    micFlashT = Math.max(0, micFlashT - dt);
+                    micHeads.rotation.x = Math.sin(micFlashT * Math.PI * 2) * 0.18;
+                }
+
+                for (const f of flags) {
+                    if (f.waveT > 0) f.waveT = Math.max(0, f.waveT - dt);
+                    const amp = f.waveT > 0 ? 0.24 : 0.04;
+                    const spd = f.waveT > 0 ? 14 : 2.2;
+                    f.pivot.rotation.y = Math.sin(now * spd) * amp;
+                }
+
+                renderer.render(scene, camera);
+            }
+            animate();
+
+            window.enterDeskScene = function () {
+                camRig.basePos.set(0, 4.1, 5.2);
+                gsap.to(camRig.basePos, {
+                    y: 3.25,
+                    z: 3.85,
+                    duration: 1.75,
+                    ease: "power3.out"
+                });
+            };
+        })();
+
+        /* ========================================================================= */
+        /* 12. BUG-FREE DOCK HOVER PREVIEWS & CLICK CINEMATIC TRANSITIONS            */
+        /* ========================================================================= */
+        document.addEventListener("DOMContentLoaded", () => {
+            // Phase 1 Intro Animation
+            gsap.to(".line-1", { y: 0, opacity: 1, duration: 1.2, ease: "power3.out", delay: 0.2 });
+            gsap.to(".line-2", { y: 0, opacity: 1, duration: 1.2, ease: "power3.out", delay: 0.45 });
+            gsap.to("#enter-btn", { y: 0, opacity: 1, duration: 1.1, ease: "power3.out", delay: 0.8 });
+
+            const enterBtn = document.getElementById("enter-btn");
+            enterBtn.addEventListener("click", () => {
+                enterBtn.style.pointerEvents = "none";
+                const tl = gsap.timeline();
+
+                tl.to("#enter-btn", { opacity: 0, y: 10, duration: 0.25, ease: "power2.in" }, "start")
+                .to("#center-seam", { scaleY: 1, duration: 0.45, ease: "expo.inOut" }, "start+=0.1")
+                .to("#door-left .intro-content", { x: -12, duration: 0.3, ease: "power2.out" }, "start+=0.45")
+                .to("#door-right .intro-content", { x: 12, duration: 0.3, ease: "power2.out" }, "start+=0.45")
+                .to("#center-seam", { opacity: 0, duration: 0.2 }, "start+=0.55")
+                .call(() => {
+                    if (window.enterDeskScene) window.enterDeskScene();
+                }, null, "start+=0.55")
+                .to("#door-left", { xPercent: -52, duration: 1.35, ease: "expo.inOut" }, "start+=0.55")
+                .to("#door-right", { xPercent: 52, duration: 1.35, ease: "expo.inOut" }, "start+=0.55")
+                .set("#intro-wrapper", { display: "none" })
+                .call(() => {
+                    document.getElementById("bottom-dock").classList.add("active");
+                });
+            });
+
+            // Build Flying Ballot Envelopes for Endorsements Storm
+            const stormContainer = document.getElementById("ballot-storm");
+            const stormCards = [];
+            for (let i = 0; i < 28; i++) {
+                const el = document.createElement("div");
+                el.className = "absolute w-28 h-16 bg-[#FAF8F2] border-2 border-[#132A22] shadow-xl flex items-center justify-center";
+                el.innerHTML = `<span class="w-4 h-4 rounded-full bg-[#E55B44] border border-[#132A22]"></span>`;
+                el.style.left = `${Math.random() * 92}vw`;
+                el.style.top = `110vh`;
+                stormContainer.appendChild(el);
+                stormCards.push(el);
+            }
+
+            let isTransitioning = false;
+            window.modalActive = false;
+            let hoverLoops = [];
+
+            const ALL_PREVIEW_TARGETS = [
+                ".fx-preview", "#fx-backdrop", "#cand-frame", "#plat-sheet",
+                "#plat-stamp", "#plat-ink", "#speech-mics", "#center-mic",
+                ".end-hand", "#gun-assembly", "#aim-reticle", "#muzzle-flash",
+                "#flying-bullet", "#film-reel-wrap", "#film-reel-svg",
+                "#proj-beam", "#flashOverlay", "#webgl-container"
+            ];
+
+            function killAllPreviewTweens() {
+                hoverLoops.forEach(t => t.kill());
+                hoverLoops = [];
+                gsap.killTweensOf(ALL_PREVIEW_TARGETS);
+            }
+
+            function resetAllPreviewsSync() {
+                killAllPreviewTweens();
+                gsap.set(".fx-preview", { autoAlpha: 0 });
+                gsap.set("#fx-backdrop", { opacity: 0 });
+                gsap.set([
+                    "#cand-frame", "#plat-sheet", "#plat-stamp", "#plat-ink",
+                    "#speech-mics", "#center-mic", ".end-hand", "#gun-assembly",
+                    "#aim-reticle", "#muzzle-flash", "#flying-bullet",
+                    "#film-reel-wrap", "#film-reel-svg", "#proj-beam", "#webgl-container"
+                ], { clearProps: "all" });
+                gsap.set("#plat-ink", { scale: 0 });
+                gsap.set("#muzzle-flash", { opacity: 0, scale: 0.5 });
+                gsap.set("#flying-bullet", { opacity: 0, x: 0 });
+                gsap.set("#film-leader", { opacity: 0 });
+                gsap.set("#flashOverlay", { opacity: 0 });
+            }
+
+            function showHoverPreview(sec) {
+                if (isTransitioning || window.modalActive) return;
+                resetAllPreviewsSync();
+
+                gsap.to("#fx-backdrop", { opacity: 1, duration: 0.25 });
+                gsap.set(`#prev-${sec}`, { autoAlpha: 1 });
+
+                if (sec === "candidate") {
+                    gsap.fromTo("#cand-frame",
+                        { y: 45, scale: 0.88, opacity: 0 },
+                        { y: 0, scale: 1, opacity: 1, duration: 0.38, ease: "back.out(1.5)" }
+                    );
+                    hoverLoops.push(gsap.to("#cand-frame", {
+                        y: -10, duration: 1.35, repeat: -1, yoyo: true, ease: "sine.inOut", delay: 0.38
+                    }));
+                }
+                else if (sec === "platform") {
+                    gsap.fromTo("#plat-sheet",
+                        { y: 30, opacity: 0, rotation: -2 },
+                        { y: 0, opacity: 1, rotation: -2, duration: 0.35, ease: "power2.out" }
+                    );
+                    gsap.fromTo("#plat-stamp",
+                        { y: -155, opacity: 0 },
+                        { y: -115, opacity: 1, duration: 0.35, ease: "back.out(1.6)" }
+                    );
+                    hoverLoops.push(gsap.to("#plat-stamp", {
+                        y: -126, duration: 0.55, repeat: -1, yoyo: true, ease: "sine.inOut", delay: 0.35
+                    }));
+                }
+                else if (sec === "speeches") {
+                    gsap.fromTo("#speech-mics",
+                        { y: 110, opacity: 0 },
+                        { y: 0, opacity: 1, duration: 0.38, ease: "power3.out" }
+                    );
+                    const fl = document.getElementById("flashOverlay");
+                    const flashTween = gsap.timeline({ repeat: -1, repeatDelay: 1.3 });
+                    flashTween.to(fl, { opacity: 0.25, duration: 0.05 }).to(fl, { opacity: 0, duration: 0.22 });
+                    hoverLoops.push(flashTween);
+                }
+                else if (sec === "endorsements") {
+                    gsap.fromTo(".end-hand",
+                        { y: 130, opacity: 0 },
+                        { y: 0, opacity: 1, duration: 0.38, stagger: 0.06, ease: "back.out(1.3)" }
+                    );
+                    hoverLoops.push(gsap.to(".end-hand", {
+                        y: -12, duration: 0.7, stagger: 0.1, repeat: -1, yoyo: true, ease: "sine.inOut", delay: 0.4
+                    }));
+                }
+                else if (sec === "attack") {
+                    gsap.fromTo("#gun-assembly",
+                        { x: -140, opacity: 0 },
+                        { x: 0, opacity: 1, duration: 0.36, ease: "power3.out" }
+                    );
+                    gsap.fromTo("#aim-reticle",
+                        { scale: 1.45, opacity: 0 },
+                        { scale: 1, opacity: 1, duration: 0.35, ease: "power2.out" }
+                    );
+                    hoverLoops.push(gsap.to("#gun-assembly", {
+                        y: -6, rotation: -1.2, duration: 0.75, repeat: -1, yoyo: true, ease: "sine.inOut", delay: 0.36
+                    }));
+                }
+                else if (sec === "videos") {
+                    gsap.fromTo("#film-reel-wrap",
+                        { scale: 0.82, opacity: 0 },
+                        { scale: 1, opacity: 1, duration: 0.36, ease: "back.out(1.4)" }
+                    );
+                    gsap.fromTo("#proj-beam",
+                        { opacity: 0, x: 180 },
+                        { opacity: 1, x: 180, duration: 0.38 }
+                    );
+                    hoverLoops.push(gsap.to("#film-reel-svg", {
+                        rotation: 360, duration: 5.5, repeat: -1, ease: "none"
+                    }));
+                }
+            }
+
+            // Open Unified TBD Placeholder Screen
+            function openTbdPage(num, title) {
+                const modal = document.getElementById("section-modal");
+                document.getElementById("tbd-num").textContent = `Section ${num}`;
+                document.getElementById("tbd-title").textContent = title;
+
+                modal.style.display = "flex";
+                gsap.fromTo(modal, { opacity: 0 }, {
+                    opacity: 1,
+                    duration: 0.32,
+                    onComplete: () => {
+                        resetAllPreviewsSync();
+                        isTransitioning = false;
+                    }
+                });
+            }
+
+            // Close TBD Placeholder & Return to 3D Oval Office
+            function closeSectionModal() {
+                if (!window.modalActive) return;
+                const modal = document.getElementById("section-modal");
+                gsap.to(modal, {
+                    opacity: 0,
+                    duration: 0.32,
+                    onComplete: () => {
+                        modal.style.display = "none";
+                        window.modalActive = false;
+                        document.getElementById("bottom-dock").classList.add("active");
+                    }
+                });
+            }
+            document.getElementById("close-modal-btn").addEventListener("click", closeSectionModal);
+            window.addEventListener("keydown", e => {
+                if (e.key === "Escape" && window.modalActive) closeSectionModal();
+            });
+
+            const bottomDock = document.getElementById("bottom-dock");
+            bottomDock.addEventListener("mouseleave", () => {
+                if (isTransitioning || window.modalActive) return;
+                killAllPreviewTweens();
+                gsap.to("#fx-backdrop", { opacity: 0, duration: 0.22 });
+                gsap.to(".fx-preview", {
+                    autoAlpha: 0,
+                    duration: 0.22,
+                    onComplete: () => {
+                        if (!isTransitioning && !window.modalActive) resetAllPreviewsSync();
+                    }
+                });
+            });
+
+            document.querySelectorAll(".dock-block").forEach(btn => {
+                const sec = btn.dataset.sec;
+                const num = btn.dataset.num;
+                const title = btn.dataset.title;
+
+                btn.addEventListener("mouseenter", () => {
+                    showHoverPreview(sec);
+                });
+
+                btn.addEventListener("click", () => {
+                    if (isTransitioning || window.modalActive) return;
+                    isTransitioning = true;
+                    window.modalActive = true;
+                    killAllPreviewTweens();
+                    gsap.set(`#prev-${sec}`, { autoAlpha: 1 });
+                    bottomDock.classList.remove("active");
+                    document.getElementById("hint").classList.remove("show");
+
+                    const tl = gsap.timeline();
+
+                    if (sec === "candidate") {
+                        tl.to("#cand-frame", {
+                            scale: 12,
+                            duration: 0.8,
+                            ease: "expo.in"
+                        })
+                        .call(() => openTbdPage(num, title), null, "-=0.15");
+                    }
+                    else if (sec === "platform") {
+                        tl.to("#plat-stamp", {
+                            y: -8,
+                            duration: 0.2,
+                            ease: "power4.in"
+                        })
+                        .to("#webgl-container", { x: 10, y: -10, duration: 0.05, yoyo: true, repeat: 5 })
+                        .to("#plat-ink", {
+                            scale: 35,
+                            duration: 0.6,
+                            ease: "expo.in"
+                        }, "-=0.2")
+                        .call(() => openTbdPage(num, title), null, "-=0.15");
+                    }
+                    else if (sec === "speeches") {
+                        const fl = document.getElementById("flashOverlay");
+                        tl.to(fl, { opacity: 0.85, duration: 0.08 })
+                        .to(fl, { opacity: 0.2, duration: 0.08 })
+                        .to("#center-mic", {
+                            scale: 18,
+                            y: 220,
+                            duration: 0.72,
+                            ease: "expo.in"
+                        }, 0)
+                        .to(fl, { opacity: 1, duration: 0.32 }, 0.35)
+                        .call(() => {
+                            openTbdPage(num, title);
+                            gsap.to(fl, { opacity: 0, duration: 0.4 });
+                        });
+                    }
+                    else if (sec === "endorsements") {
+                        tl.to(".end-hand", {
+                            y: -90,
+                            scale: 1.12,
+                            duration: 0.35,
+                            ease: "back.out(1.8)"
+                        }, 0)
+                        .fromTo(stormCards, {
+                            y: "0vh",
+                            rotation: () => (Math.random() - 0.5) * 50
+                        }, {
+                            y: "-135vh",
+                            rotation: () => (Math.random() - 0.5) * 90,
+                            duration: 0.72,
+                            stagger: 0.015,
+                            ease: "power2.in"
+                        }, 0.05)
+                        .call(() => openTbdPage(num, title), null, "-=0.2");
+                    }
+                    else if (sec === "attack") {
+                        tl.set("#muzzle-flash", { opacity: 1, scale: 1.35 })
+                        .to("#muzzle-flash", { opacity: 0, scale: 2.0, duration: 0.22 })
+                        .to("#gun-assembly", { x: -45, rotation: -14, duration: 0.14, yoyo: true, repeat: 1 }, 0)
+                        .set("#flying-bullet", { opacity: 1, x: 0 }, 0.05)
+                        .to("#flying-bullet", {
+                            x: window.innerWidth * 0.85,
+                            duration: 0.52,
+                            ease: "power3.in"
+                        }, 0.05)
+                        .to("#webgl-container", {
+                            x: -window.innerWidth,
+                            filter: "blur(12px)",
+                            duration: 0.52,
+                            ease: "power3.in"
+                        }, 0.08)
+                        .call(() => openTbdPage(num, title), null, "-=0.1");
+                    }
+                    else if (sec === "videos") {
+                        const leaderNum = document.getElementById("leader-num");
+                        tl.set("#film-leader", { opacity: 1 })
+                        .call(() => { leaderNum.textContent = "3"; })
+                        .to("#film-reel-svg", { rotation: "+=720", duration: 0.72, ease: "power2.in" }, 0)
+                        .call(() => { leaderNum.textContent = "2"; }, null, 0.22)
+                        .call(() => { leaderNum.textContent = "1"; }, null, 0.44)
+                        .to(["#film-reel-wrap", "#proj-beam"], {
+                            scale: 16,
+                            duration: 0.52,
+                            ease: "expo.in"
+                        }, 0.45)
+                        .to("#flashOverlay", { opacity: 1, duration: 0.22 }, 0.68)
+                        .call(() => {
+                            openTbdPage(num, title);
+                            gsap.to("#flashOverlay", { opacity: 0, duration: 0.38 });
+                        });
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>
