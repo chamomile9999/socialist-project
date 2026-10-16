@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>The People's Oval Office — Interactive Campaign Manifesto</title>
+    <title>The People's Oval Office — Luke Maloney Presidential Campaign</title>
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -12,10 +12,10 @@
     <!-- Three.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     
-    <!-- Google Fonts: Playfair Display & Inter -->
+    <!-- Google Fonts: Playfair Display, Newsreader, Inter & JetBrains Mono -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
     
     <style>
         html, body {
@@ -32,11 +32,26 @@
         .sans-ui {
             font-family: 'Inter', system-ui, -apple-system, sans-serif;
         }
+        .mono-ui {
+            font-family: 'JetBrains Mono', monospace;
+        }
+        .nyt-body {
+            font-family: 'Newsreader', Georgia, 'Times New Roman', serif;
+        }
 
         #webgl-container {
             position: fixed;
             inset: 0;
             z-index: 1;
+        }
+
+        /* Subtle Ambient Vignette for Office Depth */
+        .vignette {
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            background: radial-gradient(ellipse at 50% 45%, transparent 35%, rgba(22, 44, 37, 0.18) 100%);
+            z-index: 2;
         }
 
         canvas {
@@ -70,7 +85,8 @@
             bottom: 96px;
             transform: translateX(-50%) translateY(10px);
             background: rgba(19, 42, 34, 0.95);
-            color: #F4F7F5;
+            backdrop-filter: blur(8px);
+            color: #FAF8F2;
             border: 1px solid #E55B44;
             border-radius: 999px;
             padding: 8px 22px;
@@ -170,7 +186,6 @@
             transition: background 0.3s ease, color 0.3s ease;
         }
 
-        /* Floating Vertical Hairline Divider (Does NOT touch top or bottom edges) */
         .dock-block:not(:last-child)::after {
             content: '';
             position: absolute;
@@ -182,7 +197,6 @@
             pointer-events: none;
         }
 
-        /* Subtle Top Coral Indicator Line on Hover */
         .dock-block::before {
             content: '';
             position: absolute;
@@ -244,7 +258,7 @@
             pointer-events: none;
         }
 
-        /* Unified Editorial TBD / Placeholder View */
+        /* Fullscreen Section Modal */
         #section-modal {
             position: fixed;
             inset: 0;
@@ -253,6 +267,40 @@
             background: #FAF8F2;
             color: #132A22;
             user-select: text;
+        }
+
+        /* Subtle Scrollbar */
+        .editorial-scroll::-webkit-scrollbar {
+            width: 6px;
+        }
+        .editorial-scroll::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .editorial-scroll::-webkit-scrollbar-thumb {
+            background: rgba(19, 42, 34, 0.2);
+            border-radius: 3px;
+        }
+        .editorial-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(19, 42, 34, 0.4);
+        }
+
+        /* NYT Style Double Rule & Drop Cap */
+        .nyt-double-rule {
+            border-top: 1px solid #132A22;
+            border-bottom: 1px solid rgba(19, 42, 34, 0.25);
+            height: 4px;
+        }
+
+        .nyt-drop-cap::first-letter {
+            float: left;
+            font-family: 'Playfair Display', Georgia, serif;
+            font-size: 4.5rem;
+            line-height: 0.8;
+            padding-top: 6px;
+            padding-right: 14px;
+            padding-bottom: 4px;
+            font-weight: 700;
+            color: #132A22;
         }
 
         @keyframes pulseRec {
@@ -266,10 +314,41 @@
 </head>
 <body>
 
+    <!-- Shared SVG Gradients & Filters for Refined Luxury Iconography -->
+    <svg width="0" height="0" class="absolute pointer-events-none">
+        <defs>
+            <linearGradient id="brassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#F5DC9B"/>
+                <stop offset="45%" stop-color="#D9A441"/>
+                <stop offset="80%" stop-color="#9C6F21"/>
+                <stop offset="100%" stop-color="#E2B857"/>
+            </linearGradient>
+            <linearGradient id="silverGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stop-color="#F1F5F8"/>
+                <stop offset="50%" stop-color="#CBD4DC"/>
+                <stop offset="100%" stop-color="#8C9AA6"/>
+            </linearGradient>
+            <linearGradient id="walnutGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#8A5A36"/>
+                <stop offset="50%" stop-color="#5E3A22"/>
+                <stop offset="100%" stop-color="#3B2213"/>
+            </linearGradient>
+            <linearGradient id="crimsonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stop-color="#E55B44"/>
+                <stop offset="100%" stop-color="#9E2B1C"/>
+            </linearGradient>
+            <linearGradient id="emeraldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stop-color="#1E5240"/>
+                <stop offset="100%" stop-color="#0E241C"/>
+            </linearGradient>
+        </defs>
+    </svg>
+
     <!-- ========================================== -->
     <!-- Phase 2: 3D Oval Office Canvas & Overlays  -->
     <!-- ========================================== -->
     <div id="webgl-container"></div>
+    <div class="vignette" aria-hidden="true"></div>
     <div id="flashOverlay"></div>
     <div id="hint"></div>
 
@@ -284,94 +363,138 @@
         </div>
     </div>
 
-    <!-- ===================================================== -->
-    <!-- HOVER PREVIEW & CINEMATIC TRANSITION STAGE (6 MODES)  -->
-    <!-- ===================================================== -->
+    <!-- ========================================================================= -->
+    <!-- ORIGINAL HOVER PREVIEW & CINEMATIC TRANSITION STAGE (UPGRADED LUXURY SVG) -->
+    <!-- ========================================================================= -->
     <div id="fx-stage">
         <!-- Vignette Backdrop on Dock Hover -->
         <div id="fx-backdrop" class="absolute inset-0 bg-[#132A22]/25 opacity-0"></div>
 
-        <!-- 1. CANDIDATE PREVIEW: Floating Framed Portrait -->
+        <!-- 1. CANDIDATE PREVIEW: Floating Gilded Museum Portrait Frame -->
         <div id="prev-candidate" class="fx-preview flex items-center justify-center">
-            <div id="cand-frame" class="relative w-[270px] h-[350px] bg-[#132A22] border-4 border-[#D9A441] shadow-[0_25px_70px_rgba(0,0,0,0.55)] p-3 flex flex-col justify-between overflow-hidden">
-                <div class="border border-[#FAF8F2]/25 h-full w-full relative flex flex-col items-center justify-end p-5 bg-gradient-to-b from-[#1A4D3E] to-[#132A22]">
-                    <div class="absolute top-3 left-3 right-3 flex justify-between text-[9px] sans-ui tracking-[0.25em] text-[#D9A441] uppercase font-bold">
+            <div id="cand-frame" class="relative w-[285px] h-[370px] bg-[#132A22] border-[5px] border-[#D9A441] shadow-[0_30px_80px_rgba(0,0,0,0.65)] p-3 flex flex-col justify-between overflow-hidden ring-1 ring-[#FAF8F2]/30">
+                <div class="border border-[#D9A441]/50 h-full w-full relative flex flex-col items-center justify-end p-5" style="background: radial-gradient(circle at 50% 35%, #225947 0%, #0E221B 100%);">
+                    <div class="absolute top-1.5 left-1.5 w-3 h-3 border-t-2 border-l-2 border-[#D9A441]"></div>
+                    <div class="absolute top-1.5 right-1.5 w-3 h-3 border-t-2 border-r-2 border-[#D9A441]"></div>
+                    <div class="absolute bottom-1.5 left-1.5 w-3 h-3 border-b-2 border-l-2 border-[#D9A441]"></div>
+                    <div class="absolute bottom-1.5 right-1.5 w-3 h-3 border-b-2 border-r-2 border-[#D9A441]"></div>
+
+                    <div class="absolute top-3.5 left-4 right-4 flex justify-between text-[9px] sans-ui tracking-[0.25em] text-[#D9A441] uppercase font-bold">
                         <span>Official Portrait</span>
-                        <span>2028</span>
+                        <span>Ventura · CA</span>
                     </div>
-                    <svg viewBox="0 0 200 220" class="w-44 h-48 mb-1">
-                        <circle cx="100" cy="78" r="58" fill="#E55B44" opacity="0.9"/>
-                        <path d="M100 32 L106 48 L122 48 L109 58 L114 74 L100 64 L86 74 L91 58 L78 48 L94 48 Z" fill="#FAF8F2" opacity="0.3"/>
-                        <path d="M72 72 C72 48, 128 48, 128 72 C128 95, 118 112, 100 112 C82 112, 72 95, 72 72 Z" fill="#FAF8F2"/>
-                        <path d="M35 215 C38 148, 68 130, 100 130 C132 130, 162 148, 165 215 Z" fill="#FAF8F2"/>
-                        <polygon points="100,132 91,168 100,208 109,168" fill="#E55B44"/>
-                        <path d="M76 134 L100 175 L124 134" fill="none" stroke="#132A22" stroke-width="3.5"/>
+
+                    <svg viewBox="0 0 200 220" class="w-48 h-52 mb-1 drop-shadow-xl">
+                        <circle cx="100" cy="78" r="64" fill="none" stroke="url(#brassGrad)" stroke-width="1" stroke-dasharray="3 3" opacity="0.7"/>
+                        <circle cx="100" cy="78" r="56" fill="url(#crimsonGrad)" stroke="url(#brassGrad)" stroke-width="2.5"/>
+                        <path d="M100 26 L107 46 L128 46 L111 58 L117 78 L100 66 L83 78 L89 58 L72 46 L93 46 Z" fill="#FAF8F2" opacity="0.22"/>
+                        <path d="M32 215 C36 146, 66 128, 100 128 C134 128, 164 146, 168 215 Z" fill="#132A22" stroke="url(#brassGrad)" stroke-width="2.5"/>
+                        <polygon points="78,130 100,188 122,130" fill="#FAF8F2"/>
+                        <polygon points="100,134 92,168 100,210 108,168" fill="url(#crimsonGrad)"/>
+                        <path d="M72 132 L96 192 M128 132 L104 192" stroke="url(#brassGrad)" stroke-width="2" fill="none"/>
+                        <circle cx="68" cy="162" r="4" fill="url(#brassGrad)"/>
+                        <path d="M88 110 L88 134 L112 134 L112 110 Z" fill="#EFECE6"/>
+                        <path d="M72 72 C72 44, 128 44, 128 72 C128 97, 118 115, 100 115 C82 115, 72 97, 72 72 Z" fill="#FAF8F2" stroke="#132A22" stroke-width="2"/>
                     </svg>
-                    <div class="text-center z-10 bg-[#132A22]/90 px-4 py-1.5 border border-[#D9A441]/50 w-full">
-                        <div class="text-[#FAF8F2] font-black text-base tracking-wide">PRESIDENTIAL NOMINEE</div>
-                        <div class="text-[#E55B44] sans-ui text-[8px] tracking-[0.3em] uppercase font-bold">Click to Enter Dossier</div>
+
+                    <div class="text-center z-10 bg-[#0D1E18]/95 px-4 py-2 border border-[#D9A441] w-full shadow-lg">
+                        <div class="text-[#FAF8F2] font-black text-base tracking-wider">LUKE MALONEY</div>
+                        <div class="text-[#D9A441] sans-ui text-[8px] tracking-[0.28em] uppercase font-bold mt-0.5">Click to Enter Dossier</div>
                     </div>
                 </div>
             </div>
         </div>
 
-        <!-- 2. PLATFORM PREVIEW: Hovering Brass Executive Seal & Ink Nova -->
+        <!-- 2. PLATFORM PREVIEW: Parchment Charter & Gilded Mahogany Executive Seal -->
         <div id="prev-platform" class="fx-preview flex items-center justify-center">
-            <div id="plat-sheet" class="w-[300px] h-[200px] bg-[#FAF8F2] border-2 border-[#132A22] shadow-2xl p-5 flex flex-col justify-between transform rotate-[-2deg]">
-                <div class="text-[10px] sans-ui font-extrabold tracking-[0.25em] text-[#E55B44] uppercase border-b border-[#132A22] pb-1.5">
-                    H.R. 001 — THE NEW ECONOMIC BILL
+            <div id="plat-sheet" class="w-[320px] h-[215px] bg-[#FAF8F2] border-2 border-[#132A22] shadow-[0_25px_65px_rgba(0,0,0,0.5)] p-5 flex flex-col justify-between transform rotate-[-2deg] ring-4 ring-[#D9A441]/30">
+                <div class="flex items-center justify-between border-b-2 border-[#132A22] pb-2">
+                    <span class="text-[10px] sans-ui font-extrabold tracking-[0.22em] text-[#963E32] uppercase">
+                        H.R. 001 — ECONOMIC BILL
+                    </span>
+                    <span class="mono-ui text-[8px] px-1.5 py-0.5 bg-[#132A22] text-[#D9A441] font-bold">99% ACT</span>
                 </div>
-                <div class="space-y-2 my-auto">
-                    <div class="h-2 bg-[#132A22]/20 w-full"></div>
-                    <div class="h-2 bg-[#132A22]/20 w-5/6"></div>
-                    <div class="h-2 bg-[#132A22]/20 w-4/6"></div>
+                <div class="space-y-2 my-auto py-2">
+                    <div class="flex items-center gap-2">
+                        <span class="w-2 h-2 rounded-full bg-[#963E32]"></span>
+                        <div class="h-2 bg-[#132A22]/80 w-4/5 rounded-sm"></div>
+                    </div>
+                    <div class="h-1.5 bg-[#132A22]/25 w-full rounded-sm"></div>
+                    <div class="h-1.5 bg-[#132A22]/25 w-11/12 rounded-sm"></div>
+                    <div class="h-1.5 bg-[#132A22]/25 w-3/4 rounded-sm"></div>
                 </div>
-                <div class="flex justify-between items-center text-[9px] sans-ui font-bold text-[#132A22]/60 uppercase">
-                    <span>Awaiting Ratification</span>
-                    <span class="text-[#E55B44] border border-[#E55B44] px-2 py-0.5">Click to Stamp</span>
+                <div class="flex justify-between items-center text-[9px] sans-ui font-bold text-[#132A22]/70 uppercase border-t border-[#132A22]/15 pt-2">
+                    <span class="italic font-serif text-xs text-[#132A22]">Luke Maloney</span>
+                    <span class="text-[#963E32] border border-[#963E32] px-2.5 py-0.5 bg-[#963E32]/5">Click to Stamp</span>
                 </div>
             </div>
-            <div id="plat-stamp" class="absolute flex flex-col items-center">
-                <div class="w-14 h-14 rounded-full bg-[#E55B44] border-2 border-[#132A22] shadow-xl"></div>
-                <div class="w-7 h-16 bg-[#6E472B] border-x-2 border-[#132A22] -mt-2"></div>
-                <div class="w-36 h-8 bg-[#D9A441] border-2 border-[#132A22] rounded-sm shadow-2xl flex items-center justify-center">
-                    <span class="text-[8px] sans-ui font-black tracking-[0.25em] text-[#132A22]">EXECUTIVE SEAL</span>
-                </div>
+
+            <div id="plat-stamp" class="absolute flex flex-col items-center drop-shadow-[0_22px_32px_rgba(0,0,0,0.55)]">
+                <svg viewBox="0 0 160 150" class="w-40 h-36">
+                    <ellipse cx="80" cy="28" rx="30" ry="22" fill="url(#walnutGrad)" stroke="#132A22" stroke-width="3"/>
+                    <path d="M60 22 Q80 12 100 22" fill="none" stroke="#D9A441" stroke-width="1.5" opacity="0.6"/>
+                    <path d="M66 46 L94 46 L88 94 L72 94 Z" fill="url(#walnutGrad)" stroke="#132A22" stroke-width="3"/>
+                    <rect x="68" y="86" width="24" height="10" rx="2" fill="url(#brassGrad)" stroke="#132A22" stroke-width="2.5"/>
+                    <path d="M22 96 L138 96 L146 124 L14 124 Z" fill="url(#brassGrad)" stroke="#132A22" stroke-width="3"/>
+                    <rect x="26" y="102" width="108" height="16" fill="#132A22"/>
+                    <text x="80" y="113" text-anchor="middle" fill="#F5DC9B" font-family="Inter, sans-serif" font-weight="900" font-size="8.5" letter-spacing="3">EXECUTIVE SEAL</text>
+                    <rect x="20" y="124" width="120" height="8" rx="2" fill="url(#crimsonGrad)" stroke="#132A22" stroke-width="2.5"/>
+                </svg>
             </div>
             <div id="plat-ink" class="absolute w-24 h-24 rounded-full bg-[#E55B44] scale-0 pointer-events-none"></div>
         </div>
 
-        <!-- 3. SPEECHES PREVIEW: Broadcast Microphone Array & Press Flashes -->
+        <!-- 3. SPEECHES PREVIEW: Vintage Ribbon Broadcast Microphone Array & Press Flashes -->
         <div id="prev-speeches" class="fx-preview flex items-end justify-center">
             <div id="speech-mics" class="relative mb-24 flex items-end gap-6">
-                <svg viewBox="0 0 90 190" class="w-24 h-44 transform -rotate-12 translate-y-4 drop-shadow-2xl">
-                    <rect x="25" y="12" width="40" height="68" rx="20" fill="#DCE2E6" stroke="#132A22" stroke-width="4"/>
-                    <line x1="25" y1="32" x2="65" y2="32" stroke="#132A22" stroke-width="3"/>
-                    <line x1="25" y1="48" x2="65" y2="48" stroke="#132A22" stroke-width="3"/>
-                    <line x1="25" y1="64" x2="65" y2="64" stroke="#132A22" stroke-width="3"/>
-                    <rect x="39" y="80" width="12" height="110" fill="#132A22"/>
+                <svg viewBox="0 0 100 200" class="w-24 h-44 transform -rotate-12 translate-y-4 drop-shadow-2xl">
+                    <rect x="26" y="12" width="48" height="74" rx="24" fill="url(#silverGrad)" stroke="#132A22" stroke-width="3.5"/>
+                    <line x1="28" y1="30" x2="72" y2="30" stroke="#132A22" stroke-width="2.5"/>
+                    <line x1="26" y1="42" x2="74" y2="42" stroke="#132A22" stroke-width="2.5"/>
+                    <line x1="26" y1="54" x2="74" y2="54" stroke="#132A22" stroke-width="2.5"/>
+                    <line x1="28" y1="66" x2="72" y2="66" stroke="#132A22" stroke-width="2.5"/>
+                    <path d="M18 56 C18 100, 82 100, 82 56" fill="none" stroke="url(#silverGrad)" stroke-width="5"/>
+                    <path d="M18 56 C18 100, 82 100, 82 56" fill="none" stroke="#132A22" stroke-width="1.5"/>
+                    <rect x="43" y="92" width="14" height="108" fill="#132A22"/>
+                    <rect x="36" y="102" width="28" height="18" fill="#1A4D3E" stroke="#D9A441" stroke-width="1.5"/>
+                    <text x="50" y="114" text-anchor="middle" fill="#FAF8F2" font-family="Inter, sans-serif" font-weight="800" font-size="7" letter-spacing="1">PRESS</text>
                 </svg>
+
                 <div id="center-mic" class="relative flex flex-col items-center">
-                    <div class="mb-2 px-3 py-1 bg-[#E55B44] border-2 border-[#132A22] text-white sans-ui text-[9px] font-black tracking-[0.25em] flex items-center gap-1.5 shadow-lg">
-                        <span class="w-2 h-2 rounded-full bg-white rec-dot"></span> ON AIR
+                    <div class="mb-2 px-3.5 py-1 bg-[#963E32] border-2 border-[#D9A441] text-[#FAF8F2] sans-ui text-[9px] font-black tracking-[0.25em] flex items-center gap-2 shadow-xl">
+                        <span class="w-2 h-2 rounded-full bg-[#FFE66D] rec-dot"></span> LIVE BROADCAST
                     </div>
-                    <svg viewBox="0 0 120 220" class="w-32 h-56 drop-shadow-2xl">
-                        <rect x="30" y="10" width="60" height="92" rx="30" fill="#D9A441" stroke="#132A22" stroke-width="4"/>
-                        <rect x="36" y="18" width="48" height="76" rx="24" fill="#132A22"/>
-                        <line x1="36" y1="36" x2="84" y2="36" stroke="#FAF8F2" stroke-width="2.5"/>
-                        <line x1="36" y1="50" x2="84" y2="50" stroke="#FAF8F2" stroke-width="2.5"/>
-                        <line x1="36" y1="64" x2="84" y2="64" stroke="#FAF8F2" stroke-width="2.5"/>
-                        <line x1="36" y1="78" x2="84" y2="78" stroke="#FAF8F2" stroke-width="2.5"/>
-                        <path d="M22 65 C22 115, 98 115, 98 65" fill="none" stroke="#132A22" stroke-width="5"/>
-                        <rect x="53" y="112" width="14" height="108" fill="#132A22"/>
+                    <svg viewBox="0 0 130 230" class="w-36 h-60 drop-shadow-[0_25px_35px_rgba(0,0,0,0.55)]">
+                        <rect x="33" y="10" width="64" height="96" rx="32" fill="url(#brassGrad)" stroke="#132A22" stroke-width="3.5"/>
+                        <rect x="40" y="17" width="50" height="82" rx="25" fill="#132A22"/>
+                        <line x1="42" y1="33" x2="88" y2="33" stroke="#D9A441" stroke-width="2"/>
+                        <line x1="40" y1="45" x2="90" y2="45" stroke="#D9A441" stroke-width="2"/>
+                        <line x1="40" y1="57" x2="90" y2="57" stroke="#E55B44" stroke-width="2.5"/>
+                        <line x1="40" y1="69" x2="90" y2="69" stroke="#D9A441" stroke-width="2"/>
+                        <line x1="42" y1="81" x2="88" y2="81" stroke="#D9A441" stroke-width="2"/>
+                        <rect x="62" y="18" width="6" height="80" fill="url(#brassGrad)" opacity="0.85"/>
+                        <circle cx="22" cy="65" r="5" fill="url(#brassGrad)" stroke="#132A22" stroke-width="2"/>
+                        <circle cx="108" cy="65" r="5" fill="url(#brassGrad)" stroke="#132A22" stroke-width="2"/>
+                        <path d="M22 65 C22 122, 108 122, 108 65" fill="none" stroke="url(#brassGrad)" stroke-width="6"/>
+                        <path d="M22 65 C22 122, 108 122, 108 65" fill="none" stroke="#132A22" stroke-width="2"/>
+                        <rect x="57" y="114" width="16" height="116" fill="#132A22"/>
+                        <rect x="37" y="126" width="56" height="28" rx="2" fill="#132A22" stroke="url(#brassGrad)" stroke-width="2.5"/>
+                        <text x="65" y="140" text-anchor="middle" fill="#D9A441" font-family="Playfair Display, serif" font-weight="900" font-size="9" letter-spacing="1.5">OVAL OFFICE</text>
+                        <text x="65" y="149" text-anchor="middle" fill="#FAF8F2" font-family="Inter, sans-serif" font-weight="700" font-size="5.5" letter-spacing="2">CH. 01 FEED</text>
                     </svg>
                 </div>
-                <svg viewBox="0 0 90 190" class="w-24 h-44 transform rotate-12 translate-y-4 drop-shadow-2xl">
-                    <rect x="25" y="12" width="40" height="68" rx="20" fill="#DCE2E6" stroke="#132A22" stroke-width="4"/>
-                    <line x1="25" y1="32" x2="65" y2="32" stroke="#132A22" stroke-width="3"/>
-                    <line x1="25" y1="48" x2="65" y2="48" stroke="#132A22" stroke-width="3"/>
-                    <line x1="25" y1="64" x2="65" y2="64" stroke="#132A22" stroke-width="3"/>
-                    <rect x="39" y="80" width="12" height="110" fill="#132A22"/>
+
+                <svg viewBox="0 0 100 200" class="w-24 h-44 transform rotate-12 translate-y-4 drop-shadow-2xl">
+                    <rect x="26" y="12" width="48" height="74" rx="24" fill="url(#silverGrad)" stroke="#132A22" stroke-width="3.5"/>
+                    <line x1="28" y1="30" x2="72" y2="30" stroke="#132A22" stroke-width="2.5"/>
+                    <line x1="26" y1="42" x2="74" y2="42" stroke="#132A22" stroke-width="2.5"/>
+                    <line x1="26" y1="54" x2="74" y2="54" stroke="#132A22" stroke-width="2.5"/>
+                    <line x1="28" y1="66" x2="72" y2="66" stroke="#132A22" stroke-width="2.5"/>
+                    <path d="M18 56 C18 100, 82 100, 82 56" fill="none" stroke="url(#silverGrad)" stroke-width="5"/>
+                    <path d="M18 56 C18 100, 82 100, 82 56" fill="none" stroke="#132A22" stroke-width="1.5"/>
+                    <rect x="43" y="92" width="14" height="108" fill="#132A22"/>
+                    <rect x="36" y="102" width="28" height="18" fill="#963E32" stroke="#D9A441" stroke-width="1.5"/>
+                    <text x="50" y="114" text-anchor="middle" fill="#FAF8F2" font-family="Inter, sans-serif" font-weight="800" font-size="7" letter-spacing="1">LIVE</text>
                 </svg>
             </div>
         </div>
@@ -379,64 +502,77 @@
         <!-- 4. ENDORSEMENTS PREVIEW: Rising Forest of Hands & Ballot Storm -->
         <div id="prev-endorsements" class="fx-preview flex items-end justify-center">
             <div id="endorse-hands" class="w-full max-w-4xl mb-20 flex justify-around items-end px-8">
-                <svg viewBox="0 0 110 220" class="end-hand w-28 h-52 drop-shadow-xl">
-                    <rect x="34" y="95" width="42" height="125" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
-                    <rect x="28" y="150" width="54" height="70" fill="#1A4D3E" stroke="#132A22" stroke-width="4"/>
-                    <rect x="24" y="35" width="62" height="62" rx="12" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
-                    <line x1="40" y1="35" x2="40" y2="72" stroke="#132A22" stroke-width="3.5"/>
-                    <line x1="55" y1="35" x2="55" y2="72" stroke="#132A22" stroke-width="3.5"/>
-                    <line x1="70" y1="35" x2="70" y2="72" stroke="#132A22" stroke-width="3.5"/>
-                    <rect x="20" y="62" width="45" height="22" rx="8" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
+                <svg viewBox="0 0 120 230" class="end-hand w-28 h-52 drop-shadow-2xl">
+                    <rect x="36" y="98" width="48" height="132" fill="#FAF8F2" stroke="#132A22" stroke-width="3.5"/>
+                    <rect x="28" y="138" width="64" height="92" fill="url(#emeraldGrad)" stroke="#132A22" stroke-width="3.5"/>
+                    <circle cx="60" cy="122" r="4.5" fill="url(#brassGrad)" stroke="#132A22" stroke-width="1.5"/>
+                    <rect x="24" y="34" width="72" height="66" rx="14" fill="#FAF8F2" stroke="#132A22" stroke-width="3.5"/>
+                    <line x1="42" y1="34" x2="42" y2="74" stroke="#132A22" stroke-width="3"/>
+                    <line x1="60" y1="34" x2="60" y2="74" stroke="#132A22" stroke-width="3"/>
+                    <line x1="78" y1="34" x2="78" y2="74" stroke="#132A22" stroke-width="3"/>
+                    <rect x="20" y="64" width="54" height="22" rx="9" fill="#FAF8F2" stroke="#132A22" stroke-width="3.5"/>
                 </svg>
-                <svg viewBox="0 0 150 240" class="end-hand w-36 h-60 drop-shadow-xl">
-                    <g transform="rotate(-8 75 70)">
-                        <rect x="18" y="18" width="114" height="74" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
-                        <polyline points="18,18 75,60 132,18" fill="none" stroke="#132A22" stroke-width="3.5"/>
-                        <circle cx="75" cy="56" r="11" fill="#E55B44" stroke="#132A22" stroke-width="2.5"/>
+
+                <svg viewBox="0 0 160 250" class="end-hand w-36 h-60 drop-shadow-2xl">
+                    <g transform="rotate(-7 80 65)">
+                        <rect x="16" y="14" width="128" height="80" rx="3" fill="#FAF8F2" stroke="#132A22" stroke-width="3.5"/>
+                        <rect x="22" y="20" width="116" height="68" fill="none" stroke="url(#brassGrad)" stroke-width="1.5"/>
+                        <polyline points="16,14 80,62 144,14" fill="none" stroke="#132A22" stroke-width="3"/>
+                        <circle cx="80" cy="58" r="13" fill="url(#crimsonGrad)" stroke="url(#brassGrad)" stroke-width="2.5"/>
+                        <text x="80" y="62" text-anchor="middle" fill="#FAF8F2" font-family="Playfair Display, serif" font-weight="900" font-size="10">★</text>
                     </g>
-                    <rect x="54" y="88" width="40" height="150" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
-                    <rect x="48" y="155" width="52" height="85" fill="#E55B44" stroke="#132A22" stroke-width="4"/>
+                    <rect x="58" y="92" width="44" height="158" fill="#FAF8F2" stroke="#132A22" stroke-width="3.5"/>
+                    <rect x="50" y="148" width="60" height="102" fill="url(#crimsonGrad)" stroke="#132A22" stroke-width="3.5"/>
+                    <line x1="50" y1="158" x2="110" y2="158" stroke="url(#brassGrad)" stroke-width="2.5"/>
                 </svg>
-                <svg viewBox="0 0 150 240" class="end-hand w-36 h-56 drop-shadow-xl">
-                    <g transform="rotate(6 75 65)">
-                        <rect x="20" y="15" width="110" height="68" fill="#D9A441" stroke="#132A22" stroke-width="4"/>
-                        <text x="75" y="56" text-anchor="middle" fill="#132A22" font-family="Inter, sans-serif" font-weight="900" font-size="18">UNION YES</text>
+
+                <svg viewBox="0 0 160 250" class="end-hand w-36 h-56 drop-shadow-2xl">
+                    <g transform="rotate(5 80 62)">
+                        <rect x="16" y="12" width="128" height="74" rx="3" fill="url(#brassGrad)" stroke="#132A22" stroke-width="3.5"/>
+                        <rect x="23" y="19" width="114" height="60" fill="#132A22"/>
+                        <text x="80" y="47" text-anchor="middle" fill="#F5DC9B" font-family="Inter, sans-serif" font-weight="900" font-size="14" letter-spacing="2">UNION YES</text>
+                        <text x="80" y="64" text-anchor="middle" fill="#FAF8F2" font-family="Inter, sans-serif" font-weight="700" font-size="7.5" letter-spacing="3">FOR THE 99%</text>
                     </g>
-                    <rect x="68" y="82" width="14" height="158" fill="#6E472B" stroke="#132A22" stroke-width="3.5"/>
-                    <rect x="52" y="125" width="44" height="45" rx="10" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
+                    <rect x="73" y="84" width="14" height="166" fill="url(#walnutGrad)" stroke="#132A22" stroke-width="3"/>
+                    <rect x="54" y="126" width="50" height="48" rx="11" fill="#FAF8F2" stroke="#132A22" stroke-width="3.5"/>
                 </svg>
-                <svg viewBox="0 0 110 220" class="end-hand w-28 h-52 drop-shadow-xl">
-                    <rect x="34" y="95" width="42" height="125" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
-                    <rect x="28" y="150" width="54" height="70" fill="#132A22" stroke="#132A22" stroke-width="4"/>
-                    <rect x="24" y="35" width="62" height="62" rx="12" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
-                    <line x1="40" y1="35" x2="40" y2="72" stroke="#132A22" stroke-width="3.5"/>
-                    <line x1="55" y1="35" x2="55" y2="72" stroke="#132A22" stroke-width="3.5"/>
-                    <line x1="70" y1="35" x2="70" y2="72" stroke="#132A22" stroke-width="3.5"/>
+
+                <svg viewBox="0 0 120 230" class="end-hand w-28 h-52 drop-shadow-2xl">
+                    <rect x="36" y="98" width="48" height="132" fill="#FAF8F2" stroke="#132A22" stroke-width="3.5"/>
+                    <rect x="28" y="138" width="64" height="92" fill="#132A22" stroke="#132A22" stroke-width="3.5"/>
+                    <line x1="28" y1="148" x2="92" y2="148" stroke="url(#brassGrad)" stroke-width="2.5"/>
+                    <rect x="24" y="34" width="72" height="66" rx="14" fill="#FAF8F2" stroke="#132A22" stroke-width="3.5"/>
+                    <line x1="42" y1="34" x2="42" y2="74" stroke="#132A22" stroke-width="3"/>
+                    <line x1="60" y1="34" x2="60" y2="74" stroke="#132A22" stroke-width="3"/>
+                    <line x1="78" y1="34" x2="78" y2="74" stroke="#132A22" stroke-width="3"/>
                 </svg>
             </div>
             <div id="ballot-storm" class="absolute inset-0 pointer-events-none"></div>
         </div>
 
-        <!-- 5. ATTACK ADS PREVIEW: Hand Aiming Revolver -> Bullet Whip-Pan -->
+        <!-- 5. ATTACK ADS PREVIEW: Precision Brass Investigative Spotlight Cannon -> Whip-Pan -->
         <div id="prev-attack" class="fx-preview flex items-center">
             <div id="gun-assembly" class="relative ml-6 md:ml-16 flex items-center">
-                <svg viewBox="0 0 420 220" class="w-[340px] md:w-[440px] h-auto drop-shadow-[0_18px_35px_rgba(0,0,0,0.45)]">
-                    <rect x="0" y="96" width="95" height="68" fill="#132A22" stroke="#132A22" stroke-width="4"/>
-                    <rect x="95" y="102" width="26" height="56" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
-                    <circle cx="108" cy="144" r="5" fill="#D9A441"/>
-                    <path d="M121 106 L178 96 L195 148 L121 154 Z" fill="#FAF8F2" stroke="#132A22" stroke-width="4"/>
-                    <path d="M150 102 L192 102 L176 184 L134 176 Z" fill="#6E472B" stroke="#132A22" stroke-width="4"/>
-                    <path d="M192 118 C226 118, 226 150, 192 150" fill="none" stroke="#132A22" stroke-width="4.5"/>
-                    <path d="M204 120 C212 130, 208 140, 198 144" fill="none" stroke="#E55B44" stroke-width="4"/>
-                    <rect x="168" y="64" width="76" height="44" rx="4" fill="#DCE2E6" stroke="#132A22" stroke-width="4"/>
-                    <rect x="184" y="69" width="46" height="34" rx="5" fill="#94A0A8" stroke="#132A22" stroke-width="3.5"/>
-                    <line x1="188" y1="80" x2="226" y2="80" stroke="#132A22" stroke-width="2.5"/>
-                    <line x1="188" y1="92" x2="226" y2="92" stroke="#132A22" stroke-width="2.5"/>
-                    <path d="M168 68 L150 50 L164 46 L176 64 Z" fill="#132A22"/>
-                    <rect x="244" y="66" width="135" height="22" fill="#DCE2E6" stroke="#132A22" stroke-width="4"/>
-                    <rect x="244" y="88" width="110" height="10" fill="#94A0A8" stroke="#132A22" stroke-width="3.5"/>
-                    <polygon points="365,66 376,52 379,66" fill="#E55B44" stroke="#132A22" stroke-width="2.5"/>
-                    <line x1="382" y1="77" x2="420" y2="77" stroke="#E55B44" stroke-width="2.5" stroke-dasharray="6 4"/>
+                <svg viewBox="0 0 430 220" class="w-[340px] md:w-[440px] h-auto drop-shadow-[0_22px_38px_rgba(0,0,0,0.55)]">
+                    <rect x="0" y="96" width="96" height="68" fill="url(#emeraldGrad)" stroke="#132A22" stroke-width="3.5"/>
+                    <rect x="96" y="102" width="28" height="56" fill="#FAF8F2" stroke="#132A22" stroke-width="3.5"/>
+                    <circle cx="110" cy="144" r="5.5" fill="url(#brassGrad)" stroke="#132A22" stroke-width="1.5"/>
+                    <path d="M124 106 L180 96 L196 148 L124 154 Z" fill="#FAF8F2" stroke="#132A22" stroke-width="3.5"/>
+                    <path d="M152 100 L194 100 L178 186 L136 178 Z" fill="url(#walnutGrad)" stroke="#132A22" stroke-width="3.5"/>
+                    <path d="M194 118 C228 118, 228 150, 194 150" fill="none" stroke="url(#brassGrad)" stroke-width="4.5"/>
+                    <path d="M206 120 C214 130, 210 140, 198 144" fill="none" stroke="#E55B44" stroke-width="4"/>
+                    <rect x="166" y="58" width="84" height="48" rx="4" fill="url(#silverGrad)" stroke="#132A22" stroke-width="3.5"/>
+                    <rect x="178" y="64" width="60" height="36" rx="3" fill="#132A22" stroke="url(#brassGrad)" stroke-width="2"/>
+                    <text x="208" y="80" text-anchor="middle" fill="#D9A441" font-family="JetBrains Mono, monospace" font-weight="800" font-size="7.5" letter-spacing="1.5">PRESS</text>
+                    <text x="208" y="91" text-anchor="middle" fill="#E55B44" font-family="JetBrains Mono, monospace" font-weight="800" font-size="7" letter-spacing="1">EXPOSE</text>
+                    <path d="M166 66 L146 50 L160 44 L174 60 Z" fill="url(#brassGrad)" stroke="#132A22" stroke-width="2.5"/>
+                    <rect x="250" y="62" width="128" height="28" fill="url(#brassGrad)" stroke="#132A22" stroke-width="3.5"/>
+                    <line x1="274" y1="62" x2="274" y2="90" stroke="#132A22" stroke-width="2.5"/>
+                    <line x1="292" y1="62" x2="292" y2="90" stroke="#132A22" stroke-width="2.5"/>
+                    <line x1="348" y1="62" x2="348" y2="90" stroke="#132A22" stroke-width="2.5"/>
+                    <rect x="250" y="90" width="106" height="10" fill="url(#silverGrad)" stroke="#132A22" stroke-width="3"/>
+                    <polygon points="378,56 392,50 392,98 378,92" fill="#132A22" stroke="url(#brassGrad)" stroke-width="2.5"/>
+                    <line x1="396" y1="75" x2="430" y2="75" stroke="#E55B44" stroke-width="2.5" stroke-dasharray="6 4"/>
                 </svg>
 
                 <svg id="muzzle-flash" viewBox="0 0 140 140" class="w-36 h-36 -ml-8 -mt-8 opacity-0 scale-50">
@@ -445,39 +581,42 @@
                 </svg>
             </div>
 
-            <div id="aim-reticle" class="absolute right-24 top-1/2 -translate-y-1/2 w-28 h-28 flex items-center justify-center">
+            <div id="aim-reticle" class="absolute right-24 top-1/2 -translate-y-1/2 w-32 h-32 flex items-center justify-center">
                 <div class="w-full h-full rounded-full border-2 border-dashed border-[#E55B44] animate-spin" style="animation-duration: 9s;"></div>
-                <div class="absolute w-16 h-16 rounded-full border border-[#132A22]"></div>
-                <div class="absolute w-3 h-3 rounded-full bg-[#E55B44]"></div>
-                <div class="absolute -bottom-7 sans-ui text-[9px] font-black tracking-[0.25em] text-[#E55B44] uppercase bg-[#132A22] px-2 py-0.5">TARGET LOCKED</div>
+                <div class="absolute w-20 h-20 rounded-full border-2 border-[#D9A441] bg-[#132A22]/40 backdrop-blur-xs"></div>
+                <div class="absolute w-3.5 h-3.5 rounded-full bg-[#E55B44] shadow-[0_0_12px_#E55B44]"></div>
+                <div class="absolute -bottom-8 sans-ui text-[9px] font-black tracking-[0.25em] text-[#FAF8F2] uppercase bg-[#132A22] border border-[#D9A441] px-2.5 py-1 shadow-lg">RECORD LOCKED</div>
             </div>
 
             <div id="flying-bullet" class="absolute left-[360px] top-1/2 -translate-y-1/2 opacity-0 flex items-center">
-                <div class="w-44 h-[3px] bg-gradient-to-r from-transparent via-[#E55B44] to-[#FAF8F2]"></div>
-                <svg viewBox="0 0 90 36" class="w-20 h-9 -ml-2">
-                    <path d="M5 6 L52 6 C72 6, 86 18, 86 18 C86 18, 72 30, 52 30 L5 30 Z" fill="#D9A441" stroke="#132A22" stroke-width="3.5"/>
-                    <line x1="24" y1="6" x2="24" y2="30" stroke="#132A22" stroke-width="3"/>
+                <div class="w-48 h-[4px] bg-gradient-to-r from-transparent via-[#E55B44] to-[#FFE66D]"></div>
+                <svg viewBox="0 0 96 36" class="w-22 h-9 -ml-2 drop-shadow-[0_0_15px_#E55B44]">
+                    <path d="M4 6 L56 6 C76 6, 92 18, 92 18 C92 18, 76 30, 56 30 L4 30 Z" fill="url(#brassGrad)" stroke="#132A22" stroke-width="3"/>
+                    <rect x="14" y="9" width="26" height="18" fill="#963E32"/>
+                    <text x="27" y="21" text-anchor="middle" fill="#FAF8F2" font-family="JetBrains Mono, monospace" font-weight="900" font-size="7.5">FACT</text>
                 </svg>
             </div>
         </div>
 
-        <!-- 6. VIDEOS PREVIEW: Spinning 35mm Vintage Film Reel & Projector Beam -->
+        <!-- 6. VIDEOS PREVIEW: Spinning 35mm Vintage Brass Film Reel & Projector Beam -->
         <div id="prev-videos" class="fx-preview flex items-center justify-center">
-            <div id="proj-beam" class="absolute w-[650px] h-[420px] bg-gradient-to-r from-[#FFF6D6]/60 via-[#FFF6D6]/20 to-transparent" style="clip-path: polygon(0 42%, 100% 0, 100% 100%, 0 58%); transform: translateX(180px);"></div>
+            <div id="proj-beam" class="absolute w-[650px] h-[420px] bg-gradient-to-r from-[#FFF6D6]/65 via-[#FFF6D6]/22 to-transparent" style="clip-path: polygon(0 42%, 100% 0, 100% 100%, 0 58%); transform: translateX(180px);"></div>
             <div id="film-reel-wrap" class="relative flex items-center">
-                <svg id="film-reel-svg" viewBox="0 0 200 200" class="w-52 h-52 drop-shadow-2xl">
-                    <circle cx="100" cy="100" r="88" fill="#132A22" stroke="#D9A441" stroke-width="6"/>
-                    <circle cx="100" cy="100" r="72" fill="none" stroke="#FAF8F2" stroke-width="2" stroke-dasharray="8 6"/>
-                    <circle cx="100" cy="46" r="18" fill="#FAF8F2" stroke="#D9A441" stroke-width="3"/>
-                    <circle cx="100" cy="154" r="18" fill="#FAF8F2" stroke="#D9A441" stroke-width="3"/>
-                    <circle cx="53" cy="73" r="18" fill="#FAF8F2" stroke="#D9A441" stroke-width="3"/>
-                    <circle cx="147" cy="127" r="18" fill="#FAF8F2" stroke="#D9A441" stroke-width="3"/>
-                    <circle cx="147" cy="73" r="18" fill="#FAF8F2" stroke="#D9A441" stroke-width="3"/>
-                    <circle cx="53" cy="127" r="18" fill="#FAF8F2" stroke="#D9A441" stroke-width="3"/>
-                    <circle cx="100" cy="100" r="16" fill="#E55B44" stroke="#FAF8F2" stroke-width="4"/>
+                <svg id="film-reel-svg" viewBox="0 0 200 200" class="w-56 h-56 drop-shadow-[0_25px_50px_rgba(0,0,0,0.6)]">
+                    <circle cx="100" cy="100" r="90" fill="#132A22" stroke="url(#brassGrad)" stroke-width="7"/>
+                    <circle cx="100" cy="100" r="76" fill="none" stroke="#FAF8F2" stroke-width="3" stroke-dasharray="5 5" opacity="0.75"/>
+                    <circle cx="100" cy="100" r="66" fill="none" stroke="url(#brassGrad)" stroke-width="1.5"/>
+                    <circle cx="100" cy="46" r="17" fill="#FAF8F2" stroke="url(#brassGrad)" stroke-width="3.5"/>
+                    <circle cx="100" cy="154" r="17" fill="#FAF8F2" stroke="url(#brassGrad)" stroke-width="3.5"/>
+                    <circle cx="53" cy="73" r="17" fill="#FAF8F2" stroke="url(#brassGrad)" stroke-width="3.5"/>
+                    <circle cx="147" cy="127" r="17" fill="#FAF8F2" stroke="url(#brassGrad)" stroke-width="3.5"/>
+                    <circle cx="147" cy="73" r="17" fill="#FAF8F2" stroke="url(#brassGrad)" stroke-width="3.5"/>
+                    <circle cx="53" cy="127" r="17" fill="#FAF8F2" stroke="url(#brassGrad)" stroke-width="3.5"/>
+                    <circle cx="100" cy="100" r="20" fill="url(#crimsonGrad)" stroke="url(#brassGrad)" stroke-width="4"/>
+                    <circle cx="100" cy="100" r="6" fill="#FAF8F2"/>
                 </svg>
                 <div id="film-leader" class="absolute inset-0 flex items-center justify-center opacity-0">
-                    <span id="leader-num" class="sans-ui text-6xl font-black text-[#FAF8F2] bg-[#132A22]/90 w-24 h-24 rounded-full border-4 border-[#E55B44] flex items-center justify-center">3</span>
+                    <span id="leader-num" class="sans-ui text-6xl font-black text-[#FAF8F2] bg-[#132A22]/95 w-24 h-24 rounded-full border-4 border-[#D9A441] shadow-2xl flex items-center justify-center">3</span>
                 </div>
             </div>
         </div>
@@ -513,46 +652,134 @@
         </button>
     </nav>
 
-    <!-- ===================================================== -->
-    <!-- UNIFIED EDITORIAL PLACEHOLDER VIEW (CONTENT TBD)      -->
-    <!-- ===================================================== -->
-    <div id="section-modal" class="flex flex-col justify-between">
+    <!-- ========================================================================= -->
+    <!-- UNIFIED ARCHIVAL MODAL: NYT EDITORIAL SPEECHES + VIDEO + TBD VIEWS        -->
+    <!-- ========================================================================= -->
+    <div id="section-modal" class="flex flex-col justify-between overflow-hidden">
         <!-- Top Return Header -->
-        <div class="flex items-center justify-between px-8 md:px-14 py-5 border-b border-[#132A22]/15">
+        <div class="flex items-center justify-between px-6 md:px-12 py-4 border-b border-[#132A22]/15 bg-[#FAF8F2] shrink-0">
             <div class="flex items-center gap-3">
-                <span class="w-2.5 h-2.5 rounded-full bg-[#E55B44]"></span>
-                <span class="sans-ui text-[11px] font-bold tracking-[0.28em] text-[#132A22] uppercase">
-                    THE PEOPLE'S OVAL OFFICE // ARCHIVE
+                <span class="w-2 h-2 rounded-full bg-[#132A22]"></span>
+                <span class="sans-ui text-[11px] font-bold tracking-[0.26em] text-[#132A22] uppercase">
+                    THE PEOPLE'S OVAL OFFICE // <span id="modal-header-kicker" class="text-[#132A22]/60">ARCHIVE</span>
                 </span>
             </div>
-            <button id="close-modal-btn" class="sans-ui text-[11px] font-bold tracking-[0.22em] uppercase px-6 py-2.5 border border-[#132A22] bg-[#132A22] text-[#FAF8F2] hover:bg-[#E55B44] hover:border-[#E55B44] transition-colors cursor-pointer">
+            <button id="close-modal-btn" class="sans-ui text-[11px] font-bold tracking-[0.22em] uppercase px-5 py-2 border border-[#132A22] bg-[#132A22] text-[#FAF8F2] hover:bg-[#963E32] hover:border-[#963E32] transition-colors cursor-pointer">
                 ← RETURN TO OVAL OFFICE [ESC]
             </button>
         </div>
 
-        <!-- Center Editorial Placeholder Box -->
-        <div class="my-auto px-6 py-12 flex flex-col items-center text-center max-w-2xl mx-auto">
-            <div id="tbd-num" class="italic text-lg md:text-xl text-[#E55B44] mb-2">
+        <!-- 1. NEW YORK TIMES MINIMALIST EDITORIAL SPEECH VIEW (Section III) -->
+        <div id="speeches-view" class="hidden flex-1 overflow-y-auto editorial-scroll bg-[#FAF8F2]">
+            <article class="w-full max-w-[760px] mx-auto px-6 sm:px-10 py-12 md:py-16">
+                
+                <!-- NYT Section Kicker & Headline -->
+                <header class="text-center mb-10">
+                    <h1 class="text-3xl sm:text-5xl font-bold text-[#132A22] leading-[1.12] tracking-tight mb-5">
+                        ‘America Deserves a President Who Cares About the 99%, Not Just the 1%’
+                    </h1>
+
+                    <!-- Classic NYT Double Hairline Rule & Byline -->
+                    <div class="nyt-double-rule mb-4"></div>
+                    <div class="flex flex-wrap items-center justify-between gap-2 sans-ui text-[11px] tracking-[0.12em] text-[#132A22]/70 uppercase">
+                        <span>By <strong class="text-[#132A22] font-bold">Luke Maloney</strong></span>
+                        <span>Socialist Party Presidential Nominee · Verbatim Transcript</span>
+                    </div>
+                </header>
+
+                <!-- Clean Documentary Video Embed -->
+                <figure class="my-10">
+                    <div class="w-full aspect-video bg-black border border-[#132A22]/20 shadow-sm overflow-hidden">
+                        <video id="speech-video" class="w-full h-full object-cover" controls preload="metadata" playsinline>
+                            <source src="videos/speech1.mp4" type="video/mp4">
+                            Your browser does not support HTML5 video.
+                        </video>
+                    </div>
+                    <figcaption class="mt-2.5 sans-ui text-xs text-[#132A22]/60 leading-relaxed flex justify-between items-center">
+                        <span>Luke Maloney delivering his opening presidential nomination address.</span>
+                        <span class="mono-ui text-[10px] uppercase tracking-wider text-[#132A22]/45">Video: Campaign Archive</span>
+                    </figcaption>
+                </figure>
+
+                <!-- Pure, Uncluttered Single-Column Editorial Reading Flow -->
+                <div class="nyt-body text-[19px] sm:text-[20.5px] leading-[1.92] text-[#132A22]/90 max-w-[650px] mx-auto space-y-7 pt-2">
+                    <p class="nyt-drop-cap">
+                        Thank you everyone for letting me be the presidential nomination for the Socialist party. My name is Luke Maloney, I am 37 years old, and I am from Ventura, California. I am from a lower working class family, my moms side being Mexican and my dads side being White. I remember while growing up, my Mom barely had enough money to afford our one bedroom apartment despite her working three jobs at once. When I got old enough to work, I started off working at a movie theater in high school, through the years working there I realised that the older people working there that were living on their own now, were barely getting by because how low the pay was for how expensive everything was, also during this time it finally clicked in my head that basic human necessities that you need to live like, water food, and hygiene products were being charged for high money was dumb. It was around this time when I became a socialist.
+                    </p>
+
+                    <p>
+                        After high school I went to college to major in political science as well as becoming a socialist activist as I still am today. During my younger days, I mainly wrote articles about global and political issues for my school, did a lot of organization work like helping the homeless, and even joined the Peace Corps for a little bit to help people overseas in underdeveloped countries. I was able to make a pretty good name for myself during this time and was also able to get a lot of people on board with my beliefs.
+                    </p>
+
+                    <p>
+                        After that, I ran for mayor of Ventura, California and sadly lost though I did get a decent group of supporters from my campaign so when I ran the second time I won and became mayor. Me being mayor made a big name for myself and I was able to get supporters for people way out of my region of where I was representing.
+                    </p>
+
+                    <p>
+                        My campaign is for the people, and for the people and for the people to be able to live, we pay to be high enough to get by in life, things like water, food, and hygiene products should be free, and Universal healthcare and you know why? because I care for the people, I am one of the people, and you should not be giving all of your life saving to some rich guy just so you can barely get by in life, because those “people” are not for the people, they are for themselves, and if you want to fight for the people, you need to vote for me, fight for basic necessities, fight so you don't have to be poor anymore because despite a lot people that it’s your fault that your poor, well look at the prices of everything and then look how much your job is even paying you. I want workers rights, I want to try to pull out of every war/conflict currently going on so less people will die.
+                    </p>
+
+                    <p>
+                        We have had many many presidents from both the right and the “left” that claimed they would help the people and they did not. So I have this to say, if nothing goes right, go left, and remember to vote for me. America deserves a president who cares about the 99%, not just the 1%.
+                    </p>
+                </div>
+
+                <!-- Minimalist End-of-Article Mark -->
+                <footer class="max-w-[650px] mx-auto mt-12 pt-8 border-t border-[#132A22]/15 flex items-center justify-between sans-ui text-xs text-[#132A22]/60">
+                    <span>Luke Maloney · Socialist Party Nomination Address</span>
+                    <span class="text-[#132A22] font-bold tracking-widest">■</span>
+                </footer>
+
+            </article>
+        </div>
+
+        <!-- 2. CAMPAIGN VIDEOS THEATER VIEW (Section VI — Plays videos/speech1.mp4) -->
+        <div id="videos-view" class="hidden flex-1 overflow-y-auto bg-[#0F211B] text-[#FAF8F2] p-6 md:p-12 flex-col items-center justify-center">
+            <div class="w-full max-w-4xl mx-auto">
+                <div class="flex flex-wrap items-center justify-between gap-2 mb-4 border-b border-[#D9A441]/30 pb-3">
+                    <div>
+                        <span class="mono-ui text-[10px] tracking-[0.25em] text-[#D9A441] uppercase block">CAMPAIGN SCREENING ROOM // REEL 01</span>
+                        <h2 class="text-2xl md:text-4xl font-bold text-[#FAF8F2] mt-1">Presidential Nomination Address — Luke Maloney</h2>
+                    </div>
+                    <button id="switch-to-transcript-btn" class="mono-ui text-[10px] font-semibold tracking-[0.2em] uppercase px-4 py-2 bg-[#D9A441] text-[#132A22] hover:bg-[#FAF8F2] transition-colors cursor-pointer">
+                        Read Full Transcript →
+                    </button>
+                </div>
+                <div class="relative aspect-video bg-black border-2 border-[#D9A441]/60 shadow-[0_25px_80px_rgba(0,0,0,0.65)] overflow-hidden">
+                    <video id="theater-video" class="w-full h-full object-cover" controls preload="metadata" playsinline>
+                        <source src="videos/speech1.mp4" type="video/mp4">
+                    </video>
+                </div>
+                <div class="mt-4 flex flex-wrap justify-between items-center mono-ui text-xs text-[#FAF8F2]/70">
+                    <span>FILE: <b>videos/speech1.mp4</b></span>
+                    <span>"If nothing goes right, go left. America deserves a president who cares about the 99%."</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 3. GENERIC EDITORIAL PLACEHOLDER VIEW (For Sections I, II, IV, V) -->
+        <div id="tbd-view" class="hidden my-auto px-6 py-12 flex-col items-center text-center max-w-2xl mx-auto">
+            <div id="tbd-num" class="italic text-lg md:text-xl text-[#963E32] mb-2">
                 Section I
             </div>
             <h1 id="tbd-title" class="text-5xl md:text-7xl font-black tracking-tight text-[#132A22] mb-6">
                 The Candidate
             </h1>
-            <div class="w-20 h-[2px] bg-[#E55B44] mb-8"></div>
-            <div class="border border-[#132A22]/25 bg-white/70 px-10 py-8 shadow-sm">
+            <div class="w-20 h-[2px] bg-[#D9A441] mb-8"></div>
+            <div class="border border-[#132A22]/25 bg-white/80 px-10 py-8 shadow-sm">
                 <div class="sans-ui text-xs font-bold tracking-[0.35em] text-[#1A4D3E] uppercase mb-2">
-                    [ DOSSIER CONTENT PENDING ]
+                    [ DOSSIER CONTENT IN PREPARATION ]
                 </div>
                 <p class="text-base md:text-lg italic text-[#132A22]/70">
-                    This section is currently reserved for upcoming campaign materials, media embeds, and policy documentation.
+                    This section is reserved for upcoming campaign materials, policy documentation, and archival records for Luke Maloney's presidential campaign.
                 </p>
             </div>
         </div>
 
         <!-- Bottom Subtle Footer -->
-        <div class="px-8 md:px-14 py-4 border-t border-[#132A22]/10 flex justify-between items-center sans-ui text-[10px] tracking-[0.2em] text-[#132A22]/50 uppercase">
-            <span>PRESIDENTIAL CAMPAIGN MANIFESTO</span>
-            <span>STATUS: TO BE DETERMINED</span>
+        <div class="px-6 md:px-12 py-3.5 border-t border-[#132A22]/12 bg-[#FAF8F2] flex justify-between items-center sans-ui text-[10px] tracking-[0.2em] text-[#132A22]/60 uppercase shrink-0">
+            <span>LUKE MALONEY FOR PRESIDENT // VENTURA, CA</span>
+            <span>FOR THE 99%, NOT JUST THE 1%</span>
         </div>
     </div>
 
@@ -605,14 +832,14 @@
 
     </div>
 
-    <!-- ========================================== -->
-    <!-- 3D Line-Art + Warm Shader Lighting Script  -->
-    <!-- ========================================== -->
+    <!-- =================================================================== -->
+    <!-- 3D Office Script (GPT Textured PBR + Open-Cavity Fireplace & Flame) -->
+    <!-- =================================================================== -->
     <script>
         (function () {
             'use strict';
 
-            /* --- 1. Scene, Fixed Overview Camera & Renderer --- */
+            /* --- 1. Scene, Fixed Overview Camera & PBR Shadow Renderer --- */
             const container = document.getElementById('webgl-container');
             const scene = new THREE.Scene();
             const BG_HEX = 0xF7F4EB;
@@ -623,7 +850,35 @@
             const renderer = new THREE.WebGLRenderer({ antialias: true });
             renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
             renderer.setSize(window.innerWidth, window.innerHeight);
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.12;
+            renderer.shadowMap.enabled = true;
+            renderer.shadowMap.type = THREE.PCFSoftShadowMap;
             container.appendChild(renderer.domElement);
+
+            scene.add(new THREE.HemisphereLight(0xdfeaf2, 0x68513d, 0.75));
+            const sunLight = new THREE.DirectionalLight(0xffe5bd, 1.55);
+            sunLight.position.set(-3, 7, 3);
+            sunLight.castShadow = true;
+            sunLight.shadow.mapSize.set(2048, 2048);
+            Object.assign(sunLight.shadow.camera, { left: -7, right: 7, top: 7, bottom: -7, near: 0.5, far: 24 });
+            sunLight.shadow.bias = -0.00025;
+            sunLight.shadow.normalBias = 0.025;
+            sunLight.shadow.radius = 3;
+            scene.add(sunLight);
+
+            const fillLight = new THREE.DirectionalLight(0xc0d5e6, 0.4);
+            fillLight.position.set(4, 3, 2);
+            scene.add(fillLight);
+
+            const fireLight = new THREE.PointLight(0xff9c50, 0.9, 7, 2);
+            fireLight.position.set(-2.95, 0.7, -0.48);
+            scene.add(fireLight);
+
+            const deskLight = new THREE.PointLight(0xffdc96, 0.55, 3, 2);
+            deskLight.position.set(0.92, 1.4, -0.45);
+            scene.add(deskLight);
 
             const camRig = {
                 basePos: new THREE.Vector3(0, 3.25, 3.85),
@@ -637,106 +892,74 @@
             camera.lookAt(camRig.lookTarget);
             window.ovalCamRig = camRig;
 
-            /* --- 2. GLSL Shader (Warm Fireplace + Desk Lamp + Sunbeams) --- */
-            const FILL = new THREE.ShaderMaterial({
-                uniforms: {
-                    uColor: { value: new THREE.Color(0xFAF7EF) },
-                    uTint: { value: new THREE.Color(0xFFFFFF) },
-                    uFireCenter: { value: new THREE.Vector3(-2.95, 0.55, -0.48) },
-                    uFireRadius: { value: 6.5 },
-                    uFireColorNear: { value: new THREE.Color(1.0, 0.58, 0.22) },
-                    uFireColorFar: { value: new THREE.Color(0.85, 0.28, 0.10) },
-                    uFireStrength: { value: 0.72 },
-                    uLampCenter: { value: new THREE.Vector3(0.92, 1.25, -0.45) },
-                    uLampRadius: { value: 4.2 },
-                    uLampColor: { value: new THREE.Color(1.0, 0.86, 0.52) },
-                    uLampStrength: { value: 0.65 },
-                    uSunDir: { value: new THREE.Vector3(0.25, 0.78, 0.55).normalize() },
-                    uTime: { value: 0 }
-                },
-                vertexShader: `
-                    varying vec3 vWorldPos;
-                    varying vec3 vWorldNormal;
-                    void main() {
-                        vec4 worldPos = modelMatrix * vec4(position, 1.0);
-                        vWorldPos = worldPos.xyz;
-                        vWorldNormal = normalize(mat3(modelMatrix) * normal);
-                        gl_Position = projectionMatrix * viewMatrix * worldPos;
-                    }
-                `,
-                fragmentShader: `
-                    uniform vec3 uColor;
-                    uniform vec3 uTint;
-                    uniform vec3 uFireCenter;
-                    uniform float uFireRadius;
-                    uniform vec3 uFireColorNear;
-                    uniform vec3 uFireColorFar;
-                    uniform float uFireStrength;
-                    uniform vec3 uLampCenter;
-                    uniform float uLampRadius;
-                    uniform vec3 uLampColor;
-                    uniform float uLampStrength;
-                    uniform vec3 uSunDir;
-                    uniform float uTime;
-                    varying vec3 vWorldPos;
-                    varying vec3 vWorldNormal;
+            /* --- 2. Procedural Wood/Fabric Textures & PBR Materials --- */
+            const FILL = new THREE.MeshStandardMaterial({ color: 0xeee7d7, roughness: 0.8 });
+            FILL.uniforms = {
+                uTime: { value: 0 },
+                uFireStrength: { value: 0.72 },
+                uLampStrength: { value: 0.65 }
+            };
 
-                    void main() {
-                        vec3 N = normalize(vWorldNormal);
-                        vec3 base = uColor * uTint;
+            function surfaceTexture(kind) {
+                const cv = document.createElement('canvas');
+                cv.width = cv.height = 256;
+                const ctx = cv.getContext('2d');
+                ctx.fillStyle = kind === 'wood' ? '#b9a18a' : '#bcbcbc';
+                ctx.fillRect(0, 0, 256, 256);
+                let seed = 1024;
+                const random = () => {
+                    seed = (seed * 16807) % 2147483647;
+                    return seed / 2147483647;
+                };
+                for (let i = 0; i < 1800; i++) {
+                    const shade = Math.floor(50 + random() * 130);
+                    ctx.strokeStyle = 'rgba(' + shade + ',' + shade + ',' + shade + ',' + (kind === 'wood' ? 0.12 : 0.10) + ')';
+                    ctx.lineWidth = random() * 1.5;
+                    const x = random() * 256, y = random() * 256;
+                    ctx.beginPath();
+                    ctx.moveTo(x, y);
+                    ctx.lineTo(x + (kind === 'wood' ? random() * 120 : 2), y + random() * 2);
+                    ctx.stroke();
+                }
+                const t = new THREE.CanvasTexture(cv);
+                t.wrapS = t.wrapT = THREE.RepeatWrapping;
+                t.repeat.set(kind === 'wood' ? 3 : 5, kind === 'wood' ? 3 : 5);
+                return t;
+            }
 
-                        float sunDiff = max(0.0, dot(N, uSunDir));
-                        float hemi = 0.5 + 0.5 * N.y;
-                        float ao = smoothstep(-0.2, 0.65, vWorldPos.y);
-                        vec3 col = base * (0.80 + 0.14 * sunDiff + 0.08 * hemi) * (0.90 + 0.10 * ao);
-
-                        if (uFireStrength > 0.002) {
-                            vec3 toFire = uFireCenter - vWorldPos;
-                            float dF = length(toFire);
-                            vec3 dirF = toFire / max(dF, 0.001);
-                            float ndlF = smoothstep(-0.15, 0.55, dot(N, dirF));
-                            float tF = clamp(1.0 - dF / uFireRadius, 0.0, 1.0);
-                            float attenF = tF * tF * 0.75 + tF * 0.25;
-                            vec3 fCol = mix(uFireColorFar, uFireColorNear, tF);
-                            float flick = 0.88 + 0.08 * sin(uTime * 6.5 + dF * 1.4) + 0.04 * sin(uTime * 12.3 + 1.9);
-                            col += fCol * uFireStrength * flick * attenF * (0.35 + 0.65 * ndlF) * 0.36;
-                        }
-
-                        if (uLampStrength > 0.002) {
-                            vec3 toL = uLampCenter - vWorldPos;
-                            float dL = length(toL);
-                            vec3 dirL = toL / max(dL, 0.001);
-                            float ndlL = smoothstep(-0.1, 0.5, dot(N, dirL));
-                            float tL = clamp(1.0 - dL / uLampRadius, 0.0, 1.0);
-                            float attenL = tL * tL * 0.8 + tL * 0.2;
-                            col += uLampColor * uLampStrength * attenL * (0.3 + 0.7 * ndlL) * 0.34;
-                        }
-
-                        float radial = length(vWorldPos.xz) * 0.045;
-                        col *= clamp(1.03 - radial * 0.25, 0.82, 1.03);
-
-                        gl_FragColor = vec4(col, 1.0);
-                    }
-                `,
-                side: THREE.DoubleSide,
-                polygonOffset: true,
-                polygonOffsetFactor: 1,
-                polygonOffsetUnits: 1
-            });
+            const woodTexture = surfaceTexture('wood');
+            const fabricTexture = surfaceTexture('fabric');
 
             function LITMAT(hex, opts) {
-                const u = { uTint: { value: new THREE.Color(hex) } };
-                for (const k in FILL.uniforms) if (k !== 'uTint') u[k] = FILL.uniforms[k];
-                const m = new THREE.ShaderMaterial({
-                    uniforms: u,
-                    vertexShader: FILL.vertexShader,
-                    fragmentShader: FILL.fragmentShader,
-                    side: THREE.DoubleSide,
-                    polygonOffset: true,
-                    polygonOffsetFactor: 1,
-                    polygonOffsetUnits: 1
+                const woods = [0x6E472B, 0x94633E, 0xBA8C63];
+                const metals = [0xD9A441, 0x9C7238, 0xDCE2E6];
+                const palette = {
+                    0x6E472B: 0x3c241b,
+                    0x94633E: 0x68432e,
+                    0xBA8C63: 0x956b47,
+                    0x7C2D26: 0x253b32,
+                    0xE55B44: 0x963e32,
+                    0xD9A441: 0xb08b4e,
+                    0x1D4D3E: 0x233e34,
+                    0x1E6B4E: 0x214b36,
+                    0x6BA4B8: 0x456978
+                };
+                const m = new THREE.MeshStandardMaterial({
+                    color: palette[hex] || hex,
+                    roughness: metals.includes(hex) ? 0.3 : woods.includes(hex) ? 0.48 : 0.82,
+                    metalness: metals.includes(hex) ? 0.76 : 0
                 });
-                if (opts) for (const k in opts) m[k] = opts[k];
+                if (woods.includes(hex)) {
+                    m.map = woodTexture;
+                    m.bumpMap = woodTexture;
+                    m.bumpScale = 0.008;
+                }
+                if ([0x1D4D3E, 0x7C2D26, 0x163D30].includes(hex)) {
+                    m.bumpMap = fabricTexture;
+                    m.bumpScale = 0.012;
+                    m.roughness = 0.88;
+                }
+                if (opts) Object.assign(m, opts);
                 return m;
             }
 
@@ -755,6 +978,25 @@
             const MAT_CREAM = LITMAT(0xFCF9F0);
             const MAT_GREEN_SHADE = LITMAT(0x1E6B4E);
             const MAT_BLUE_OCEAN = LITMAT(0x6BA4B8);
+            const MAT_FIREBRICK = LITMAT(0x231A16);
+            const MAT_FLAME_OUTER = new THREE.MeshStandardMaterial({
+                color: 0xFF5722,
+                emissive: 0xFF3D00,
+                emissiveIntensity: 0.95,
+                roughness: 0.25
+            });
+            const MAT_FLAME_INNER = new THREE.MeshStandardMaterial({
+                color: 0xFFD54F,
+                emissive: 0xFFAB00,
+                emissiveIntensity: 1.15,
+                roughness: 0.15
+            });
+            const MAT_EMBER_GLOW = new THREE.MeshStandardMaterial({
+                color: 0xD84315,
+                emissive: 0xFF3D00,
+                emissiveIntensity: 0.75,
+                roughness: 0.6
+            });
             const MAT_GLASS = new THREE.MeshBasicMaterial({
                 color: 0xDDF0F5,
                 transparent: true,
@@ -763,9 +1005,10 @@
                 side: THREE.DoubleSide
             });
 
-            const LINE_DARK = new THREE.LineBasicMaterial({ color: 0x132A22 });
-            const LINE_SOFT = new THREE.LineBasicMaterial({ color: 0x7A8880, transparent: true, opacity: 0.65 });
-            const LINE_FAINT = new THREE.LineBasicMaterial({ color: 0xC8C2B4, transparent: true, opacity: 0.55 });
+            const LINE_DARK = new THREE.LineBasicMaterial({ color: 0x392e25, transparent: true, opacity: 0.18 });
+            const LINE_ARCH = new THREE.LineBasicMaterial({ color: 0x241B15, transparent: true, opacity: 0.38 });
+            const LINE_SOFT = new THREE.LineBasicMaterial({ color: 0x7A8880, transparent: true, opacity: 0.25 });
+            const LINE_FAINT = new THREE.LineBasicMaterial({ color: 0xC8C2B4, transparent: true, opacity: 0.18 });
             const LINE_CORAL = new THREE.LineBasicMaterial({ color: 0xE55B44 });
             const LINE_GOLD = new THREE.LineBasicMaterial({ color: 0xB58322 });
 
@@ -777,12 +1020,15 @@
 
             function edge(g, threshold = 12, lmat = LINE_DARK, fmat = FILL) {
                 const grp = new THREE.Group();
-                grp.add(new THREE.Mesh(g, fmat));
+                const mesh = new THREE.Mesh(g, fmat);
+                mesh.castShadow = true;
+                mesh.receiveShadow = true;
+                grp.add(mesh);
                 grp.add(new THREE.LineSegments(new THREE.EdgesGeometry(g, threshold), lmat));
                 return grp;
             }
             const box = (w, h, d, fmat = FILL, lmat = LINE_DARK) => edge(new THREE.BoxGeometry(w, h, d), 12, lmat, fmat);
-            const cyl = (rt, rb, h, seg = 12, fmat = FILL, lmat = LINE_DARK) => edge(new THREE.CylinderGeometry(rt, rb, h, seg), 18, lmat, fmat);
+            const cyl = (rt, rb, h, seg = 12, fmat = FILL, lmat = LINE_DARK) => edge(new THREE.CylinderGeometry(rt, rb, h, Math.max(seg, 24)), 18, lmat, fmat);
 
             function put(o, x, y, z, rx, ry, rz, parent) {
                 o.position.set(x, y, z);
@@ -1029,6 +1275,8 @@
                 }
                 clothGeo.computeVertexNormals();
                 const clothMesh = new THREE.Mesh(clothGeo, [MAT_GOLD, MAT_GOLD, MAT_GOLD, MAT_GOLD, fMat, fMat]);
+                clothMesh.castShadow = true;
+                clothMesh.receiveShadow = true;
                 clothMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(clothGeo, 25), LINE_DARK));
                 put(clothMesh, 0.45, 0, 0, 0.08, 0, -0.08, clothPivot);
 
@@ -1040,48 +1288,153 @@
             makeDetailedFlag(1.42, -2.05, -0.35, 'WAVE DEMOCRATIC SOCIALIST RED FLAG (ROSE & FIST)', 'socialist');
 
             /* ========================================================================= */
-            /* 6. LEFT SIDE OF SCREEN: MARBLE FIREPLACE & AGENDA EASEL                   */
+            /* 6. LEFT SIDE: TRUE OPEN-CAVITY MARBLE FIREPLACE & DANCING FLAMES          */
             /* ========================================================================= */
             const FP_X = -3.05, FP_Z = -0.48, FP_RY = 0.62;
             const fpGroup = new THREE.Group();
             put(fpGroup, FP_X, 0, FP_Z, 0, FP_RY, 0);
 
-            put(box(1.65, 0.10, 0.65, MAT_CREAM), 0, 0.05, 0, 0, 0, 0, fpGroup);
-            put(box(0.36, 1.25, 0.52, MAT_CREAM), -0.58, 0.675, 0, 0, 0, 0, fpGroup);
-            put(box(0.36, 1.25, 0.52, MAT_CREAM), 0.58, 0.675, 0, 0, 0, 0, fpGroup);
-            put(box(1.56, 0.28, 0.52, MAT_CREAM), 0, 1.18, 0, 0, 0, 0, fpGroup);
-            put(box(1.78, 0.10, 0.66, MAT_RUG), 0, 1.37, 0, 0, 0, 0, fpGroup);
-            put(box(0.92, 0.95, 0.10, MAT_LEATHER), 0, 0.55, -0.18, 0, 0, 0, fpGroup);
-
-            for (const sx of [-0.62, 0.62]) {
-                put(cyl(0.08, 0.06, 0.14, 8, MAT_CORAL), sx, 1.49, 0, 0, 0, 0, fpGroup);
-                put(edge(new THREE.SphereGeometry(0.12, 8, 6), 12, LINE_DARK, MAT_RUG), sx, 1.64, 0, 0, 0, 0, fpGroup);
+            // 1. Extended Stepped Marble Hearth Slab & Brass Fender Rail
+            put(box(1.92, 0.055, 0.88, MAT_CREAM, LINE_ARCH), 0, 0.0275, 0.08, 0, 0, 0, fpGroup);
+            put(box(1.74, 0.045, 0.72, MAT_WALL, LINE_ARCH), 0, 0.075, 0.04, 0, 0, 0, fpGroup);
+            fpGroup.add(lloop([
+                [-0.88, 0.058, -0.28], [0.88, 0.058, -0.28],
+                [0.88, 0.058, 0.46], [-0.88, 0.058, 0.46]
+            ], LINE_GOLD));
+            for (let hx = -0.60; hx <= 0.60; hx += 0.30) {
+                fpGroup.add(line([[hx, 0.058, 0.25], [hx, 0.058, 0.46]], LINE_SOFT));
             }
-            put(box(0.32, 0.22, 0.12, MAT_GOLD), 0, 1.53, 0, 0, 0, 0, fpGroup);
+            put(box(1.56, 0.045, 0.025, MAT_GOLD), 0, 0.075, 0.44, 0, 0, 0, fpGroup);
+            put(box(0.025, 0.045, 0.26, MAT_GOLD), -0.77, 0.075, 0.32, 0, 0, 0, fpGroup);
+            put(box(0.025, 0.045, 0.26, MAT_GOLD), 0.77, 0.075, 0.32, 0, 0, 0, fpGroup);
+            for (const fx of [-0.77, 0, 0.77]) {
+                put(edge(new THREE.SphereGeometry(0.024, 10, 8), 15, LINE_GOLD, MAT_GOLD), fx, 0.112, 0.44, 0, 0, 0, fpGroup);
+            }
 
-            put(cyl(0.05, 0.05, 0.55, 7, MAT_WOOD_DARK), 0, 0.15, 0.04, 0, 0.2, Math.PI / 2, fpGroup);
-            put(cyl(0.05, 0.05, 0.55, 7, MAT_WOOD_DARK), 0, 0.19, -0.04, 0, -0.25, Math.PI / 2, fpGroup);
+            // 2. TRUE HOLLOW OPEN FIREBOX CAVITY
+            put(box(0.98, 0.94, 0.05, MAT_FIREBRICK, LINE_ARCH), 0, 0.55, -0.20, 0, 0, 0, fpGroup);
+            put(box(0.05, 0.94, 0.42, MAT_FIREBRICK, LINE_ARCH), -0.45, 0.55, -0.01, 0, 0.14, 0, fpGroup);
+            put(box(0.05, 0.94, 0.42, MAT_FIREBRICK, LINE_ARCH), 0.45, 0.55, -0.01, 0, -0.14, 0, fpGroup);
+            put(box(0.96, 0.04, 0.42, MAT_FIREBRICK, LINE_ARCH), 0, 0.10, -0.01, 0, 0, 0, fpGroup);
+
+            for (let by = 0.16; by <= 0.92; by += 0.11) {
+                fpGroup.add(line([[-0.42, by, -0.172], [0.42, by, -0.172]], LINE_SOFT));
+                for (let bx = -0.34; bx <= 0.34; bx += 0.17) {
+                    const offset = (Math.round(by * 10) % 2 === 0) ? 0.04 : -0.04;
+                    fpGroup.add(line([[bx + offset, by, -0.172], [bx + offset, by + 0.11, -0.172]], LINE_SOFT));
+                }
+            }
+
+            // 3. Brass Firebox Surround Trim & Beveled Inner Frame
+            put(box(0.055, 0.92, 0.06, MAT_GOLD), -0.45, 0.55, 0.20, 0, 0, 0, fpGroup);
+            put(box(0.055, 0.92, 0.06, MAT_GOLD), 0.45, 0.55, 0.20, 0, 0, 0, fpGroup);
+            put(box(0.96, 0.06, 0.06, MAT_GOLD), 0, 0.99, 0.20, 0, 0, 0, fpGroup);
+            put(box(0.13, 0.11, 0.08, MAT_GOLD), 0, 1.01, 0.22, 0, 0, 0, fpGroup);
+            fpGroup.add(lloop([
+                [-0.42, 0.10, 0.235], [0.42, 0.10, 0.235],
+                [0.42, 0.96, 0.235], [-0.42, 0.96, 0.235]
+            ], LINE_GOLD));
+
+            // 4. Fluted Classical Pilasters
+            for (const sx of [-0.64, 0.64]) {
+                put(box(0.34, 1.22, 0.52, MAT_CREAM, LINE_ARCH), sx, 0.69, 0, 0, 0, 0, fpGroup);
+                put(box(0.38, 0.11, 0.56, MAT_WOOD_LIGHT, LINE_ARCH), sx, 0.14, 0.01, 0, 0, 0, fpGroup);
+                put(box(0.36, 0.04, 0.54, MAT_GOLD), sx, 0.205, 0.01, 0, 0, 0, fpGroup);
+                put(box(0.24, 0.88, 0.045, MAT_CREAM, LINE_ARCH), sx, 0.68, 0.265, 0, 0, 0, fpGroup);
+                for (const gx of [-0.08, -0.04, 0, 0.04, 0.08]) {
+                    fpGroup.add(line([[sx + gx, 0.27, 0.29], [sx + gx, 1.08, 0.29]], LINE_ARCH));
+                }
+                fpGroup.add(lloop([
+                    [sx - 0.10, 0.25, 0.291], [sx + 0.10, 0.25, 0.291],
+                    [sx + 0.10, 1.10, 0.291], [sx - 0.10, 1.10, 0.291]
+                ], LINE_GOLD));
+                put(box(0.38, 0.06, 0.56, MAT_GOLD), sx, 1.16, 0.01, 0, 0, 0, fpGroup);
+                put(box(0.36, 0.08, 0.54, MAT_CREAM, LINE_ARCH), sx, 1.23, 0.01, 0, 0, 0, fpGroup);
+                put(cyl(0.042, 0.042, 0.02, 16, MAT_GOLD), sx, 1.23, 0.285, Math.PI / 2, 0, 0, fpGroup);
+            }
+
+            // 5. Carved Entablature Frieze with Central Medallion & Relief Scrolls
+            put(box(1.64, 0.26, 0.54, MAT_CREAM, LINE_ARCH), 0, 1.18, 0.01, 0, 0, 0, fpGroup);
+            put(box(0.88, 0.16, 0.03, MAT_WALL, LINE_GOLD), 0, 1.18, 0.275, 0, 0, 0, fpGroup);
+            put(cyl(0.068, 0.068, 0.025, 20, MAT_GOLD), 0, 1.18, 0.292, Math.PI / 2, 0, 0, fpGroup);
+            put(cyl(0.038, 0.038, 0.030, 16, MAT_CORAL), 0, 1.18, 0.295, Math.PI / 2, 0, 0, fpGroup);
+            for (const side of [-1, 1]) {
+                fpGroup.add(line([
+                    [side * 0.10, 1.18, 0.293],
+                    [side * 0.24, 1.22, 0.293],
+                    [side * 0.38, 1.18, 0.293],
+                    [side * 0.24, 1.14, 0.293],
+                    [side * 0.10, 1.18, 0.293]
+                ], LINE_GOLD));
+                fpGroup.add(line([[side * 0.41, 1.12, 0.293], [side * 0.41, 1.24, 0.293]], LINE_ARCH));
+            }
+
+            // 6. Classical Dentil Moulding Row & Multi-Tiered Mantelpiece Shelf
+            for (let dx = -0.76; dx <= 0.76; dx += 0.076) {
+                put(box(0.038, 0.036, 0.04, MAT_CREAM, LINE_ARCH), dx, 1.325, 0.28, 0, 0, 0, fpGroup);
+            }
+            put(box(1.78, 0.055, 0.62, MAT_CREAM, LINE_ARCH), 0, 1.365, 0.02, 0, 0, 0, fpGroup);
+            put(box(1.88, 0.075, 0.68, MAT_RUG, LINE_ARCH), 0, 1.425, 0.03, 0, 0, 0, fpGroup);
+            put(box(1.84, 0.02, 0.65, MAT_GOLD), 0, 1.47, 0.03, 0, 0, 0, fpGroup);
+
+            // 7. Mantelpiece Garniture
+            for (const sx of [-0.66, 0.66]) {
+                put(box(0.14, 0.035, 0.14, MAT_GOLD), sx, 1.495, 0.03, 0, 0, 0, fpGroup);
+                put(cyl(0.075, 0.052, 0.12, 16, MAT_CORAL), sx, 1.57, 0.03, 0, 0, 0, fpGroup);
+                put(edge(new THREE.SphereGeometry(0.105, 14, 10), 14, LINE_GOLD, MAT_RUG), sx, 1.71, 0.03, 0, 0, 0, fpGroup);
+                put(cyl(0.025, 0.035, 0.05, 12, MAT_GOLD), sx, 1.82, 0.03, 0, 0, 0, fpGroup);
+            }
+            const mantelClock = new THREE.Group();
+            put(mantelClock, 0, 1.48, 0.05, 0, 0, 0, fpGroup);
+            put(box(0.38, 0.04, 0.16, MAT_WOOD_DARK), 0, 0.02, 0, 0, 0, 0, mantelClock);
+            put(box(0.32, 0.22, 0.13, MAT_GOLD), 0, 0.15, 0, 0, 0, 0, mantelClock);
+            put(cyl(0.08, 0.08, 0.02, 20, MAT_CREAM), 0, 0.16, 0.065, Math.PI / 2, 0, 0, mantelClock);
+            mantelClock.add(line([[0, 0.16, 0.078], [0, 0.21, 0.078]], LINE_DARK));
+            mantelClock.add(line([[0, 0.16, 0.078], [0.04, 0.16, 0.078]], LINE_CORAL));
+            put(edge(new THREE.ConeGeometry(0.03, 0.06, 8), 12, LINE_GOLD, MAT_GOLD), -0.13, 0.29, 0, 0, 0, 0, mantelClock);
+            put(edge(new THREE.ConeGeometry(0.03, 0.06, 8), 12, LINE_GOLD, MAT_GOLD), 0.13, 0.29, 0, 0, 0, 0, mantelClock);
+
+            // 8. Brass Andirons, Glowing Ember Bed, Logs & Vivid Dancing Flames
+            for (const ax of [-0.26, 0.26]) {
+                put(cyl(0.016, 0.022, 0.28, 12, MAT_GOLD), ax, 0.24, 0.18, 0, 0, 0, fpGroup);
+                put(edge(new THREE.SphereGeometry(0.034, 12, 10), 15, LINE_GOLD, MAT_GOLD), ax, 0.39, 0.18, 0, 0, 0, fpGroup);
+                put(box(0.028, 0.028, 0.30, MAT_BRONZE), ax, 0.13, 0.04, 0, 0, 0, fpGroup);
+            }
+            put(box(0.58, 0.022, 0.022, MAT_GOLD), 0, 0.19, 0.18, 0, 0, 0, fpGroup);
+            const emberBed = box(0.62, 0.04, 0.24, MAT_EMBER_GLOW, LINE_CORAL);
+            put(emberBed, 0, 0.13, 0.06, 0, 0, 0, fpGroup);
+
+            put(cyl(0.054, 0.054, 0.60, 12, MAT_WOOD_DARK), 0, 0.18, 0.10, 0, 0.18, Math.PI / 2, fpGroup);
+            put(cyl(0.050, 0.050, 0.58, 12, MAT_WOOD_DARK), 0, 0.22, 0.02, 0, -0.22, Math.PI / 2, fpGroup);
+            put(cyl(0.045, 0.048, 0.50, 12, MAT_WOOD_MID), 0, 0.26, 0.07, 0.12, 0.05, Math.PI / 2, fpGroup);
 
             const flames = [];
             let fireLit = true;
-            for (let i = 0; i < 4; i++) {
-                const cone = edge(
-                    new THREE.ConeGeometry(0.13 - i * 0.02, 0.42 - i * 0.05, 7),
-                    10,
-                    i % 2 === 0 ? LINE_CORAL : LINE_GOLD,
-                    i % 2 === 0 ? MAT_CORAL : MAT_GOLD
-                );
-                put(cone, (i - 1.5) * 0.09, 0.32, 0.02, 0, 0, 0, fpGroup);
-                flames.push({ mesh: cone, ph: i * 1.5 });
+            const flameSpecs = [
+                { x: -0.18, z: 0.08, r: 0.095, h: 0.38, mat: MAT_FLAME_OUTER, lmat: LINE_CORAL, ph: 0.0 },
+                { x: -0.08, z: 0.11, r: 0.115, h: 0.48, mat: MAT_FLAME_INNER, lmat: LINE_GOLD,  ph: 1.2 },
+                { x:  0.00, z: 0.07, r: 0.130, h: 0.55, mat: MAT_FLAME_OUTER, lmat: LINE_CORAL, ph: 2.4 },
+                { x:  0.06, z: 0.12, r: 0.105, h: 0.44, mat: MAT_FLAME_INNER, lmat: LINE_GOLD,  ph: 3.7 },
+                { x:  0.17, z: 0.09, r: 0.090, h: 0.36, mat: MAT_FLAME_OUTER, lmat: LINE_CORAL, ph: 4.9 },
+                { x:  0.00, z: 0.14, r: 0.080, h: 0.32, mat: MAT_FLAME_INNER, lmat: LINE_GOLD,  ph: 5.8 }
+            ];
+            for (const fs of flameSpecs) {
+                const fGeo = new THREE.ConeGeometry(fs.r, fs.h, 9);
+                fGeo.translate(0, fs.h / 2, 0);
+                const cone = edge(fGeo, 12, fs.lmat, fs.mat);
+                cone.traverse(c => { if (c.isMesh) c.castShadow = false; });
+                put(cone, fs.x, 0.22, fs.z, 0, 0, 0, fpGroup);
+                flames.push({ mesh: cone, baseX: fs.x, baseZ: fs.z, ph: fs.ph });
             }
 
             regInteract(fpGroup, 'IGNITE / EXTINGUISH OVAL OFFICE FIREPLACE', () => {
                 fireLit = !fireLit;
                 flames.forEach(f => f.mesh.visible = fireLit);
+                emberBed.visible = fireLit;
             });
 
             const portraitG = new THREE.Group();
-            put(portraitG, FP_X, 2.28, FP_Z, 0, FP_RY, 0);
+            put(portraitG, FP_X, 2.34, FP_Z, 0, FP_RY, 0);
             put(box(1.18, 1.28, 0.07, MAT_GOLD), 0, 0, -0.18, 0, 0, 0, portraitG);
             const artCv = document.createElement('canvas');
             artCv.width = 256; artCv.height = 280;
@@ -1135,15 +1488,15 @@
             bctx.beginPath(); bctx.moveTo(34, 66); bctx.lineTo(478, 66); bctx.stroke();
             bctx.fillStyle = '#FAF8F2'; bctx.font = 'bold 17px monospace';
             bctx.fillText('01. UNIVERSAL HEALTHCARE ACT', 34, 102);
-            bctx.fillText('02. GREEN NEW DEAL & HIGH-SPEED RAIL', 34, 134);
-            bctx.fillText('03. WEALTH TAX & WORKER CO-OPS', 34, 166);
+            bctx.fillText('02. FREE WATER, FOOD & HYGIENE', 34, 134);
+            bctx.fillText('03. WORKERS\' RIGHTS & END WARS', 34, 166);
             const bTex = new THREE.CanvasTexture(bCv);
             const bPlane = new THREE.Mesh(new THREE.PlaneGeometry(1.12, 0.78), new THREE.MeshBasicMaterial({ map: bTex }));
             put(bPlane, 0, 0, 0.028, 0, 0, 0, boardPanel);
 
             const notes = [
-                { col: '#FFE66D', txt: 'PASS RAIL BILL', px: -0.35, py: -0.16, rz: 0.07 },
-                { col: '#FFB3C6', txt: 'TAX THE RICH', px: 0.0, py: -0.14, rz: -0.05 },
+                { col: '#FFE66D', txt: 'FOR THE 99%', px: -0.35, py: -0.16, rz: 0.07 },
+                { col: '#FFB3C6', txt: 'GO LEFT', px: 0.0, py: -0.14, rz: -0.05 },
                 { col: '#AECDFF', txt: 'MEDICARE 4 ALL', px: 0.35, py: -0.16, rz: 0.09 }
             ];
             let editingIdx = 0;
@@ -1170,7 +1523,10 @@
                 const ng = new THREE.Group();
                 const faceM = new THREE.MeshBasicMaterial({ map: n.tex });
                 const bg = new THREE.BoxGeometry(0.24, 0.24, 0.012);
-                ng.add(new THREE.Mesh(bg, [MAT_CREAM, MAT_CREAM, MAT_CREAM, MAT_CREAM, faceM, MAT_CREAM]));
+                const m = new THREE.Mesh(bg, [MAT_CREAM, MAT_CREAM, MAT_CREAM, MAT_CREAM, faceM, MAT_CREAM]);
+                m.castShadow = true;
+                m.receiveShadow = true;
+                ng.add(m);
                 ng.add(new THREE.LineSegments(new THREE.EdgesGeometry(bg), LINE_DARK));
                 put(ng, n.px, n.py, 0.036, 0, 0, n.rz, boardPanel);
 
@@ -1205,15 +1561,13 @@
             const bookcase = new THREE.Group();
             put(bookcase, 2.55, 0, -0.95, 0, -0.55, 0);
 
-            // Rebuilt as true hollow open cabinetry (Back panel + Side walls + Plinth + Roof) so shelves are never occluded!
-            put(box(1.42, 2.36, 0.04, MAT_WOOD_DARK), 0, 1.18, -0.16, 0, 0, 0, bookcase); // Thin Back Panel
-            put(box(1.46, 0.34, 0.38, MAT_WOOD_DARK), 0, 0.17, 0.01, 0, 0, 0, bookcase);  // Lower Base Cabinet
-            put(box(1.50, 0.08, 0.42, MAT_WOOD_DARK), 0, 0.04, 0.02, 0, 0, 0, bookcase);  // Bottom Plinth
-            put(box(0.06, 2.02, 0.36, MAT_WOOD_DARK), -0.68, 1.35, 0.0, 0, 0, 0, bookcase); // Left Side Wall
-            put(box(0.06, 2.02, 0.36, MAT_WOOD_DARK), 0.68, 1.35, 0.0, 0, 0, 0, bookcase);  // Right Side Wall
-            put(box(1.42, 0.05, 0.38, MAT_WOOD_DARK), 0, 2.35, 0.01, 0, 0, 0, bookcase);  // Top Roof Board
+            put(box(1.42, 2.36, 0.04, MAT_WOOD_DARK), 0, 1.18, -0.16, 0, 0, 0, bookcase);
+            put(box(1.46, 0.34, 0.38, MAT_WOOD_DARK), 0, 0.17, 0.01, 0, 0, 0, bookcase);
+            put(box(1.50, 0.08, 0.42, MAT_WOOD_DARK), 0, 0.04, 0.02, 0, 0, 0, bookcase);
+            put(box(0.06, 2.02, 0.36, MAT_WOOD_DARK), -0.68, 1.35, 0.0, 0, 0, 0, bookcase);
+            put(box(0.06, 2.02, 0.36, MAT_WOOD_DARK), 0.68, 1.35, 0.0, 0, 0, 0, bookcase);
+            put(box(1.42, 0.05, 0.38, MAT_WOOD_DARK), 0, 2.35, 0.01, 0, 0, 0, bookcase);
 
-            // Fluted Front Side Pilasters with Vertical Groove Lines
             for (const sx of [-0.68, 0.68]) {
                 put(box(0.09, 2.32, 0.06, MAT_WOOD_MID), sx, 1.18, 0.19, 0, 0, 0, bookcase);
                 for (const gx of [-0.022, 0, 0.022]) {
@@ -1222,24 +1576,20 @@
                 put(box(0.11, 0.05, 0.08, MAT_GOLD), sx, 2.28, 0.19, 0, 0, 0, bookcase);
                 put(box(0.11, 0.05, 0.08, MAT_GOLD), sx, 0.35, 0.19, 0, 0, 0, bookcase);
             }
-            // Crown Entablature & Dentil Moulding Teeth (Placed cleanly above y = 2.36)
             put(box(1.52, 0.10, 0.44, MAT_GOLD), 0, 2.42, 0.02, 0, 0, 0, bookcase);
             for (let dx = -0.64; dx <= 0.64; dx += 0.08) {
                 put(box(0.04, 0.032, 0.04, MAT_CREAM), dx, 2.355, 0.21, 0, 0, 0, bookcase);
             }
-            // Vertical Backboard Plank Lines visible inside the open compartments
             for (let bx = -0.52; bx <= 0.52; bx += 0.13) {
                 bookcase.add(iline([[bx, 0.36, -0.135], [bx, 2.32, -0.135]]));
             }
 
-            // Shelves at y = 0.85, 1.35, and 1.85 (Leaving a tall 48cm open gallery bay on the Top Shelf!)
             for (const sy of [0.35, 0.85, 1.35, 1.85]) {
                 put(box(1.30, 0.04, 0.36, MAT_WOOD_LIGHT), 0, sy, 0.01, 0, 0, 0, bookcase);
                 bookcase.add(line([[-0.63, sy + 0.012, 0.192], [0.63, sy + 0.012, 0.192]], LINE_GOLD));
                 bookcase.add(line([[-0.63, sy - 0.012, 0.192], [0.63, sy - 0.012, 0.192]], LINE_DARK));
             }
 
-            // Detailed Books on Lower 3 Compartments (y = 0.37, 0.87, 1.37)
             const bookMats = [MAT_CORAL, MAT_RUG, MAT_GOLD, MAT_LEATHER, MAT_BLUE_OCEAN, MAT_CREAM];
             const shelfYs = [0.37, 0.87, 1.37];
             for (let row = 0; row < 3; row++) {
@@ -1271,7 +1621,6 @@
             /* --- OPEN TOP SHELF GALLERY BAY (y = 1.87 to 2.32) — 3 CLEARLY VISIBLE ARTIFACTS --- */
             const TOP_SHELF_Y = 1.87;
 
-            // Top-Shelf Item 1 (Left): Brass Armillary Astrolabe
             const astroG = new THREE.Group();
             put(astroG, -0.40, TOP_SHELF_Y, 0.05, 0, 0, 0, bookcase);
             put(cyl(0.068, 0.088, 0.03, 12, MAT_GOLD), 0, 0.015, 0, 0, 0, 0, astroG);
@@ -1287,7 +1636,6 @@
             let astroBoost = 0;
             regInteract(astroG, 'ACTIVATE BRASS ARMILLARY ASTROLABE (TOP SHELF)', () => { astroBoost = 4.0; });
 
-            // Top-Shelf Item 2 (Center): Bronze Bust of Abraham Lincoln on Marble Plinth
             const bustG = new THREE.Group();
             put(bustG, 0.0, TOP_SHELF_Y, 0.06, 0, 0, 0, bookcase);
             put(box(0.14, 0.045, 0.12, MAT_CREAM), 0, 0.0225, 0, 0, 0, 0, bustG);
@@ -1301,7 +1649,6 @@
             let bustSpinT = 0;
             regInteract(bustG, 'SALUTE BRONZE BUST OF ABRAHAM LINCOLN (TOP SHELF)', () => { bustSpinT = 2.2; });
 
-            // Top-Shelf Item 3 (Right): Crystal Campaign Hourglass (Flips 180 deg!)
             const topHgPivot = new THREE.Group();
             put(topHgPivot, 0.40, TOP_SHELF_Y + 0.17, 0.06, 0, 0, 0, bookcase);
             const topHg = new THREE.Group();
@@ -1317,7 +1664,6 @@
             let hgFlipped = false, hgCurRot = 0;
             regInteract(topHgPivot, 'FLIP CAMPAIGN COUNTDOWN HOURGLASS (TOP SHELF)', () => { hgFlipped = !hgFlipped; });
 
-            // Standing Brass & Ocean Floor Globe (In front of bookcase on the right)
             const floorGlobe = new THREE.Group();
             put(floorGlobe, 2.18, 0, 0.12);
             put(cyl(0.20, 0.26, 0.06, 12, MAT_WOOD_DARK), 0, 0.03, 0, 0, 0, 0, floorGlobe);
@@ -1345,7 +1691,6 @@
             put(box(2.22, 0.012, 1.02, MAT_DESK_PAD), 0, DTOP + 0.002, 0, 0, 0, 0, deskG);
             deskG.add(lloop([[-1.08, DTOP + 0.01, -0.48], [1.08, DTOP + 0.01, -0.48], [1.08, DTOP + 0.01, 0.48], [-1.08, DTOP + 0.01, 0.48]], LINE_GOLD));
 
-            // Left & Right Carved Pedestals with Recessed Panel Line-Art
             for (const sx of [-0.84, 0.84]) {
                 put(box(0.72, 0.74, 1.16, MAT_WOOD_MID), sx, 0.37, 0, 0, 0, 0, deskG);
                 put(box(0.78, 0.06, 1.22, MAT_WOOD_DARK), sx, 0.03, 0, 0, 0, 0, deskG);
@@ -1363,7 +1708,6 @@
             put(box(0.98, 0.66, 0.06, MAT_WOOD_MID), 0, 0.39, -0.50, 0, 0, 0, deskG);
             put(cyl(0.19, 0.19, 0.04, 20, MAT_GOLD), 0, 0.39, -0.54, Math.PI / 2, 0, 0, deskG);
 
-            // Intricate Pull-Out Drawers
             for (const [sx, title, secretType] of [
                 [-0.84, 'SLIDE LEFT DRAWER (CLASSIFIED BILLIONAIRE TAX AUDIT)', 'audit'],
                 [0.84, 'SLIDE RIGHT DRAWER (GOLDEN KEY TO THE PUBLIC TREASURY)', 'key']
@@ -1468,9 +1812,9 @@
                 cokeCv.width = 256; cokeCv.height = 128;
                 const cctx = cokeCv.getContext('2d');
                 cctx.fillStyle = '#E2E6E9'; cctx.fillRect(0, 0, 256, 128);
-                cctx.fillStyle = '#E55B44'; cctx.fillRect(0, 12, 256, 14);
+                cctx.fillStyle = '#AD6250'; cctx.fillRect(0, 12, 256, 14);
                 cctx.fillRect(0, 102, 256, 14);
-                cctx.fillStyle = '#E55B44'; cctx.font = 'italic bold 36px Georgia, serif';
+                cctx.fillStyle = '#AD6250'; cctx.font = 'italic bold 36px Georgia, serif';
                 cctx.textAlign = 'center'; cctx.fillText('Diet Coke', 128, 66);
                 cctx.fillStyle = '#132A22'; cctx.font = 'bold 13px monospace';
                 cctx.fillText('CHILLED RESERVE', 128, 90);
@@ -1478,6 +1822,8 @@
                 const canMat = new THREE.MeshBasicMaterial({ map: cokeTex, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
                 const canBodyGeo = new THREE.CylinderGeometry(0.050, 0.050, 0.17, 18);
                 const canMesh = new THREE.Mesh(canBodyGeo, [canMat, MAT_SILVER, MAT_SILVER]);
+                canMesh.castShadow = true;
+                canMesh.receiveShadow = true;
                 canMesh.add(new THREE.LineSegments(new THREE.EdgesGeometry(canBodyGeo, 20), LINE_DARK));
                 put(canMesh, 0, 0.095, 0, 0, 0, 0, canG);
                 const pullTab = box(0.024, 0.004, 0.016, MAT_CORAL);
@@ -1557,6 +1903,8 @@
             const docMat = new THREE.MeshBasicMaterial({ map: docTex, polygonOffset: true, polygonOffsetFactor: 1, polygonOffsetUnits: 1 });
             const pageGeo = new THREE.BoxGeometry(0.34, 0.012, 0.44);
             const rightPage = new THREE.Mesh(pageGeo, [MAT_CREAM, MAT_CREAM, docMat, MAT_CREAM, MAT_CREAM, MAT_CREAM]);
+            rightPage.castShadow = true;
+            rightPage.receiveShadow = true;
             rightPage.add(new THREE.LineSegments(new THREE.EdgesGeometry(pageGeo), LINE_DARK));
             put(rightPage, 0, 0.006, 0, 0, 0, 0, folioG);
 
@@ -1666,7 +2014,7 @@
                 fctx.fillStyle = '#FAF8F2'; fctx.font = 'bold 76px monospace';
                 fctx.textAlign = 'center'; fctx.textBaseline = 'middle';
                 fctx.fillText(str, 128, 66);
-                fctx.fillStyle = '#E55B44'; fctx.fillRect(0, 62, 256, 4);
+                fctx.fillStyle = '#AD6250'; fctx.fillRect(0, 62, 256, 4);
                 flipTex.needsUpdate = true;
             }
             drawFlipTime(FLIP_TIMES[0]);
@@ -1790,7 +2138,7 @@
             let radioPlayT = 0;
             regInteract(radioG, 'TUNE VINTAGE UNION BROADCAST RADIO', () => { radioPlayT = 3.8; });
 
-            /* --- EXTRA INTERACTIVE #7: Classified Waste Bin (Nudged Right to x = 1.66, z = 0.36 — Zero Desk Clipping!) --- */
+            /* --- EXTRA INTERACTIVE #7: Classified Waste Bin (Right of Desk) --- */
             const binG = new THREE.Group();
             put(binG, 1.66, 0, 0.36);
             put(cyl(0.20, 0.15, 0.42, 14, MAT_GOLD), 0, 0.21, 0, 0, 0, 0, binG);
@@ -1806,7 +2154,7 @@
             let binTossT = 0;
             regInteract(binG, 'SHRED & TOSS CORPORATE LOBBYIST BILLS IN WASTE BIN', () => { binTossT = 1.6; });
 
-            /* --- EXTRA INTERACTIVE #8: Presidential Leather Briefcase (Nudged Left to x = -1.78, z = 0.35 — Zero Desk Clipping!) --- */
+            /* --- EXTRA INTERACTIVE #8: Presidential Leather Briefcase (Left of Desk) --- */
             const caseG = new THREE.Group();
             put(caseG, -1.78, 0, 0.35, 0, 0.42, 0);
             put(box(0.46, 0.09, 0.34, MAT_LEATHER), 0, 0.045, 0, 0, 0, 0, caseG);
@@ -1819,6 +2167,30 @@
             put(box(0.05, 0.035, 0.02, MAT_GOLD), 0.14, 0.01, 0.345, 0, 0, 0, caseLidPivot);
             regHinge(caseLidPivot, 'x', 0, -1.25, 'OPEN / CLOSE PRESIDENTIAL LEATHER BRIEFCASE');
 
+            scene.traverse(obj => {
+                if (obj.isMesh) {
+                    obj.receiveShadow = true;
+                    if (obj.material === MAT_GLASS) obj.castShadow = false;
+                }
+            });
+
+            // Subtle Radial Contact Shadow anchoring the Resolute Desk to the rug
+            const shadowCanvas = document.createElement('canvas');
+            shadowCanvas.width = shadowCanvas.height = 128;
+            const shadowCtx = shadowCanvas.getContext('2d');
+            const grad = shadowCtx.createRadialGradient(64, 64, 4, 64, 64, 64);
+            grad.addColorStop(0, 'rgba(16, 20, 15, 0.45)');
+            grad.addColorStop(1, 'rgba(16, 20, 15, 0)');
+            shadowCtx.fillStyle = grad;
+            shadowCtx.fillRect(0, 0, 128, 128);
+            const contact = new THREE.Mesh(
+                new THREE.PlaneGeometry(3.8, 2.5),
+                new THREE.MeshBasicMaterial({ map: new THREE.CanvasTexture(shadowCanvas), transparent: true, depthWrite: false })
+            );
+            contact.rotation.x = -Math.PI / 2;
+            contact.position.set(0, 0.032, DESK_Z);
+            scene.add(contact);
+
             /* ========================================================================= */
             /* 11. Raycasting, Subtle Mouse Parallax & Main Animation Loop               */
             /* ========================================================================= */
@@ -1830,7 +2202,14 @@
                 mouse.x = (clientX / window.innerWidth) * 2 - 1;
                 mouse.y = -(clientY / window.innerHeight) * 2 + 1;
                 raycaster.setFromCamera(mouse, camera);
-                const hits = raycaster.intersectObjects(interactMeshes, false);
+                const hits = raycaster.intersectObjects(interactMeshes, false).filter(h => {
+                    let o = h.object;
+                    while (o) {
+                        if (!o.visible) return false;
+                        o = o.parent;
+                    }
+                    return true;
+                });
                 return hits.length > 0 ? hits[0].object.userData.interactRoot : null;
             }
 
@@ -1874,6 +2253,9 @@
                 const dt = Math.min(0.05, Math.max(0.001, now - lastT));
                 lastT = now;
 
+                fireLight.intensity = fireLit ? 0.85 + Math.sin(now * 6.5) * 0.12 + Math.cos(now * 11.2) * 0.06 : 0;
+                deskLight.intensity = lampOn ? 0.55 : 0;
+
                 FILL.uniforms.uTime.value = now;
                 FILL.uniforms.uFireStrength.value += ((fireLit ? 0.78 : 0.0) - FILL.uniforms.uFireStrength.value) * 0.1;
                 FILL.uniforms.uLampStrength.value += ((lampOn ? 0.70 : 0.0) - FILL.uniforms.uLampStrength.value) * 0.12;
@@ -1887,7 +2269,6 @@
                 );
                 camera.lookAt(camRig.lookTarget);
 
-                // Smooth Overdamped Interpolation for Hinges & Slides (Zero Bounce!)
                 const damp = 1 - Math.exp(-5.5 * dt);
                 for (const h of hinges) {
                     const s = h.userData.spring;
@@ -1900,7 +2281,6 @@
                     g.position[s.axis] = s.base + s.dist * s.cur;
                 }
 
-                // Top-Shelf Astrolabe, Lincoln Bust & Hourglass Animations
                 if (astroBoost > 0) astroBoost = Math.max(0, astroBoost - dt);
                 const astroMult = astroBoost > 0 ? 5.5 : 0.4;
                 for (const r of astroRings) {
@@ -1917,7 +2297,6 @@
                 hgCurRot += (targetHgRot - hgCurRot) * damp;
                 topHgPivot.rotation.z = hgCurRot;
 
-                // Extra Props: Scales of Justice, Coffee Steam, Union Radio & Waste Bin
                 if (scaleTiltT > 0) {
                     scaleTiltT = Math.max(0, scaleTiltT - dt);
                     scaleBeam.rotation.z = Math.sin(now * 7.5) * 0.24 * (scaleTiltT / 3.2);
@@ -1955,11 +2334,15 @@
                     chairG.rotation.y += chairSpinV * dt;
                     chairSpinV *= Math.pow(0.18, dt);
                 }
+
                 if (fireLit) {
                     for (const f of flames) {
-                        const s = 0.85 + 0.24 * Math.sin(now * 8.5 + f.ph);
-                        f.mesh.scale.set(1, s, 1);
-                        f.mesh.rotation.z = Math.sin(now * 6.2 + f.ph) * 0.09;
+                        const sy = 0.82 + 0.34 * Math.sin(now * 9.5 + f.ph) + 0.14 * Math.cos(now * 15.2 + f.ph * 2.1);
+                        const sxz = 0.90 + 0.16 * Math.cos(now * 8.0 + f.ph);
+                        f.mesh.scale.set(sxz, sy, sxz);
+                        f.mesh.rotation.z = Math.sin(now * 7.2 + f.ph) * 0.16;
+                        f.mesh.rotation.x = Math.cos(now * 6.4 + f.ph) * 0.10;
+                        f.mesh.position.x = f.baseX + Math.sin(now * 5.5 + f.ph) * 0.012;
                     }
                 }
 
@@ -2107,7 +2490,7 @@
         })();
 
         /* ========================================================================= */
-        /* 12. BUG-FREE DOCK HOVER PREVIEWS & CLICK CINEMATIC TRANSITIONS            */
+        /* 12. RESTORED ORIGINAL HOVER ANIMATIONS & CLICK TRANSITIONS                */
         /* ========================================================================= */
         document.addEventListener("DOMContentLoaded", () => {
             // Phase 1 Intro Animation
@@ -2142,7 +2525,7 @@
             for (let i = 0; i < 28; i++) {
                 const el = document.createElement("div");
                 el.className = "absolute w-28 h-16 bg-[#FAF8F2] border-2 border-[#132A22] shadow-xl flex items-center justify-center";
-                el.innerHTML = `<span class="w-4 h-4 rounded-full bg-[#E55B44] border border-[#132A22]"></span>`;
+                el.innerHTML = `<span class="w-4 h-4 rounded-full bg-[#E55B44] border border-[#D9A441]"></span>`;
                 el.style.left = `${Math.random() * 92}vw`;
                 el.style.top = `110vh`;
                 stormContainer.appendChild(el);
@@ -2260,11 +2643,36 @@
                 }
             }
 
-            // Open Unified TBD Placeholder Screen
-            function openTbdPage(num, title) {
+            // Open Section Modal (Routes to NYT Speeches, Videos Theater, or TBD Placeholder)
+            function openSectionView(sec, num, title) {
                 const modal = document.getElementById("section-modal");
-                document.getElementById("tbd-num").textContent = `Section ${num}`;
-                document.getElementById("tbd-title").textContent = title;
+                const speechesView = document.getElementById("speeches-view");
+                const videosView = document.getElementById("videos-view");
+                const tbdView = document.getElementById("tbd-view");
+                const kicker = document.getElementById("modal-header-kicker");
+
+                speechesView.classList.add("hidden");
+                speechesView.classList.remove("block");
+                videosView.classList.add("hidden");
+                videosView.classList.remove("flex");
+                tbdView.classList.add("hidden");
+                tbdView.classList.remove("flex");
+
+                if (sec === "speeches") {
+                    kicker.textContent = "SECTION III // SPEECHES";
+                    speechesView.classList.remove("hidden");
+                    speechesView.classList.add("block");
+                } else if (sec === "videos") {
+                    kicker.textContent = "SECTION VI // CAMPAIGN SCREENING ROOM";
+                    videosView.classList.remove("hidden");
+                    videosView.classList.add("flex");
+                } else {
+                    kicker.textContent = `SECTION ${num} // ARCHIVE`;
+                    document.getElementById("tbd-num").textContent = `Section ${num}`;
+                    document.getElementById("tbd-title").textContent = title;
+                    tbdView.classList.remove("hidden");
+                    tbdView.classList.add("flex");
+                }
 
                 modal.style.display = "flex";
                 gsap.fromTo(modal, { opacity: 0 }, {
@@ -2277,9 +2685,14 @@
                 });
             }
 
-            // Close TBD Placeholder & Return to 3D Oval Office
+            // Close Section Modal & Pause Any Playing Videos
             function closeSectionModal() {
                 if (!window.modalActive) return;
+                const sVid = document.getElementById("speech-video");
+                const tVid = document.getElementById("theater-video");
+                if (sVid && !sVid.paused) sVid.pause();
+                if (tVid && !tVid.paused) tVid.pause();
+
                 const modal = document.getElementById("section-modal");
                 gsap.to(modal, {
                     opacity: 0,
@@ -2296,6 +2709,14 @@
                 if (e.key === "Escape" && window.modalActive) closeSectionModal();
             });
 
+            // Switch from Videos Theater to NYT Speech Transcript
+            document.getElementById("switch-to-transcript-btn").addEventListener("click", () => {
+                const tVid = document.getElementById("theater-video");
+                if (tVid && !tVid.paused) tVid.pause();
+                openSectionView("speeches", "III", "Keynote Speeches");
+            });
+
+            /* --- Original Bottom Dock Hover & Click Cinematic Transitions --- */
             const bottomDock = document.getElementById("bottom-dock");
             bottomDock.addEventListener("mouseleave", () => {
                 if (isTransitioning || window.modalActive) return;
@@ -2336,7 +2757,7 @@
                             duration: 0.8,
                             ease: "expo.in"
                         })
-                        .call(() => openTbdPage(num, title), null, "-=0.15");
+                        .call(() => openSectionView(sec, num, title), null, "-=0.15");
                     }
                     else if (sec === "platform") {
                         tl.to("#plat-stamp", {
@@ -2350,7 +2771,7 @@
                             duration: 0.6,
                             ease: "expo.in"
                         }, "-=0.2")
-                        .call(() => openTbdPage(num, title), null, "-=0.15");
+                        .call(() => openSectionView(sec, num, title), null, "-=0.15");
                     }
                     else if (sec === "speeches") {
                         const fl = document.getElementById("flashOverlay");
@@ -2364,7 +2785,7 @@
                         }, 0)
                         .to(fl, { opacity: 1, duration: 0.32 }, 0.35)
                         .call(() => {
-                            openTbdPage(num, title);
+                            openSectionView(sec, num, title);
                             gsap.to(fl, { opacity: 0, duration: 0.4 });
                         });
                     }
@@ -2385,7 +2806,7 @@
                             stagger: 0.015,
                             ease: "power2.in"
                         }, 0.05)
-                        .call(() => openTbdPage(num, title), null, "-=0.2");
+                        .call(() => openSectionView(sec, num, title), null, "-=0.2");
                     }
                     else if (sec === "attack") {
                         tl.set("#muzzle-flash", { opacity: 1, scale: 1.35 })
@@ -2403,7 +2824,7 @@
                             duration: 0.52,
                             ease: "power3.in"
                         }, 0.08)
-                        .call(() => openTbdPage(num, title), null, "-=0.1");
+                        .call(() => openSectionView(sec, num, title), null, "-=0.1");
                     }
                     else if (sec === "videos") {
                         const leaderNum = document.getElementById("leader-num");
@@ -2419,7 +2840,7 @@
                         }, 0.45)
                         .to("#flashOverlay", { opacity: 1, duration: 0.22 }, 0.68)
                         .call(() => {
-                            openTbdPage(num, title);
+                            openSectionView(sec, num, title);
                             gsap.to("#flashOverlay", { opacity: 0, duration: 0.38 });
                         });
                     }
